@@ -25,7 +25,7 @@ def argparser():
     parser.add_argument('--coart_alpha', type=float, default=10.0)
     parser.add_argument('--load_coart_path', type=str, default="./log/JacoToss.toss_coartl_prim")
     parser.add_argument('--is_train', type=str2bool, default=False)
-    parser.add_argument('--total_timesteps', type=int, default=50000)
+    parser.add_argument('--total_timesteps', type=int, default=100000)
     parser.add_argument('--max_eval_iters', type=int, default=100)
 
     parser.add_argument('--max_kl', type=float, default=0.01)
