@@ -1,5 +1,6 @@
 import os
 import sys
+import statistics 
 
 from util import make_env
 
@@ -31,14 +32,16 @@ def get_primitives(config):
 def evaluate_primtive(env, policy, config):
     obs = env.reset()
     count = 0
+    rewards = []
     while count < config.max_eval_iters:
         action, _states = policy.predict(obs)
-        obs, rewards, dones, info = env.step(action)
+        obs, reward, done, info = env.step(action)
 
-        #print(rewards)
+        reward.append(rewards)
         if(config.render):
             env.render()
-        if(dones == True):
+        if(done == True):
             obs = env.reset()
-
         count += 1
+    print("Max Reward : ", max(rewards))
+    print("Average Reward : ", statistics.mean(rewards))

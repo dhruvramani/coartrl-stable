@@ -23,7 +23,6 @@ def run(config):
         for i, p_policy in enumerate(primitives):
             print("Evaluating Primitive : ", config.primitive_envs[i])
             evaluate_primtive(env, p_policy, config)
-            _ = input(" ")
 
     if(config.is_coart):
         # NOTE : Implement Algo here
