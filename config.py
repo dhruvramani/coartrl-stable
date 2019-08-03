@@ -19,12 +19,13 @@ def argparser():
     parser.add_argument('--primitive_paths', type=str2list, default="JacoToss.toss_coartl_prim, JacoHit.hit_coartl_prim", help='Separated list \
                         of model names inside primitive_dir loaded in order with primitive_envs \
                         eg. JacoToss.ICLR2019,JacoHit.ICLR2019')
+    parser.add_argument('--eval_primitives', type=str2bool, default=True)
 
     parser.add_argument('--is_coart', type=str2bool, default=False)
     parser.add_argument('--coart_alpha', type=float, default=10.0)
     parser.add_argument('--load_coart_path', type=str, default="./log/JacoToss.toss_coartl_prim")
     parser.add_argument('--is_train', type=str2bool, default=False)
-    parser.add_argument('--total_timesteps', type=int, default=10000)
+    parser.add_argument('--total_timesteps', type=int, default=25000)
     parser.add_argument('--max_eval_iters', type=int, default=100)
 
     parser.add_argument('--max_kl', type=float, default=0.01)

@@ -19,9 +19,11 @@ def run(config):
     env = make_env(config.env, config)
     primitives = get_primitives(config)
 
-    print("Evaluating Primitives")
-    for p_policy in primitives:
-        evaluate_primtive(env, p_policy, config)
+    if(config.eval_primitives):
+        for i, p_policy in enumerate(primitives):
+            print("Evaluating Primitive : ", config.primitive_envs[i])
+            evaluate_primtive(env, p_policy, config)
+            _ = input(" ")
 
     if(config.is_coart):
         # NOTE : Implement Algo here
