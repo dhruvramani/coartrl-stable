@@ -7,6 +7,7 @@ from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import TRPO
 
 def learn_primitive(env, config, save_path):
+    print("Training Primitive : ", save_path.split("/")[-1])
     model = TRPO(MlpPolicy, env, max_kl=config.max_kl, cg_iters=config.cg_iters,
                  cg_damping=config.cg_damping, vf_stepsize=config.vf_stepsize, vf_iters=config.vf_iters)
 
@@ -34,7 +35,7 @@ def evaluate_primtive(env, policy, config):
         action, _states = policy.predict(obs)
         obs, rewards, dones, info = env.step(action)
 
-        print(rewards)
+        #print(rewards)
         if(config.render):
             env.render()
         if(dones == True):
