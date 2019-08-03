@@ -34,6 +34,7 @@ def evaluate_primtive(env, policy, config):
         action, _states = policy.predict(obs)
         obs, rewards, dones, info = env.step(action)
 
+        print(rewards)
         if(config.render):
             env.render()
         if(dones == True):
