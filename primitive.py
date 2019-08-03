@@ -1,6 +1,7 @@
 import os
 import sys
 import statistics 
+import numpy as np
 
 from util import make_env
 
@@ -37,7 +38,7 @@ def evaluate_primtive(env, policy, config):
         action, _states = policy.predict(obs)
         obs, reward, done, info = env.step(action)
 
-        reward.append(rewards)
+        rewards.append(np.float(reward))
         if(config.render):
             env.render()
         if(done == True):
