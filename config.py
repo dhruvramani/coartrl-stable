@@ -34,6 +34,7 @@ def argparser():
     parser.add_argument('--vf_iters', type=int, default=5)
 
     parser.add_argument('--render', type=str2bool, default=True, help='Render frames')
+    parser.add_argument('--policy_dir', type=str, default='./policies')
     parser.add_argument('--log_dir', type=str, default='./log')
     parser.add_argument('--debug', type=str2bool, default=False, help='See debugging info')
 

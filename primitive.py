@@ -17,7 +17,7 @@ def learn_primitive(env, config, save_path):
 def get_primitives(config):
     primitives = []
     for i, p_path in enumerate(config.primitive_paths):
-        path = os.path.expanduser(os.path.join(config.log_dir, p_path))
+        path = os.path.expanduser(os.path.join(config.policy_dir, p_path))
         if(os.path.exists(path)):
             model = TRPO.load(path)
         else :

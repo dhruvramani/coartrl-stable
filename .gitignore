@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
-logs/
-policies/
+log/
+#policies/
 __pycache__/
 *.py[cod]
 *$py.class
