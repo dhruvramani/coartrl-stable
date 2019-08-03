@@ -20,7 +20,7 @@ def argparser():
                         of model names inside primitive_dir loaded in order with primitive_envs \
                         eg. JacoToss.ICLR2019,JacoHit.ICLR2019')
 
-    parser.add_argument('--is_coart', type=str2bool, default=True)
+    parser.add_argument('--is_coart', type=str2bool, default=False)
     parser.add_argument('--coart_alpha', type=float, default=10.0)
     parser.add_argument('--load_coart_path', type=str, default="./log/JacoToss.toss_coartl_prim")
     parser.add_argument('--is_train', type=str2bool, default=False)

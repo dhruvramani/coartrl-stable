@@ -26,3 +26,17 @@ def get_primitives(config):
         primitives.append(model)
 
     return primitives
+
+def evaluate_primtive(env, policy, config):
+    obs = env.reset()
+    count = 0
+    while count < config.max_eval_iters:
+        action, _states = policy.predict(obs)
+        obs, rewards, dones, info = env.step(action)
+
+        if(config.render):
+            env.render()
+        if(dones == True):
+            obs = env.reset()
+
+        count += 1
