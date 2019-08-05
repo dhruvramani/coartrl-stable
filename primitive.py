@@ -5,7 +5,7 @@ import numpy as np
 
 from util import make_env
 
-from stable_baselines.common.policies import MlpPolicy
+from stable_baseline_policy import MlpPolicy
 from trpo_mpi import TRPO
 
 def learn_primitive(env, config, save_path):
