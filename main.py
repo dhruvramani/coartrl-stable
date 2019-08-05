@@ -9,9 +9,6 @@ from baselines.common.atari_wrappers import TransitionEnvWrapper
 from config import argparser
 from util import make_env
 
-from stable_baselines.common.policies import MlpPolicy
-from stable_baselines import TRPO
-
 from primitive import get_primitives, evaluate_primtive
 
 
@@ -20,7 +17,7 @@ def run(config):
     primitives = get_primitives(config)
 
     if(config.eval_primitives):
-        for i, p_policy in enumerate(primitives):
+        for i, p_policy in enumerate([primitives[0]]):
             print("Evaluating Primitive : ", config.primitive_envs[i])
             evaluate_primtive(env, p_policy, config)
 
