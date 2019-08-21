@@ -70,7 +70,7 @@ def traj_segment_generator(policy, env, horizon, reward_giver=None, gail=False):
                     "true_rewards": true_rewards,
                     "vpred": vpreds,
                     "actions": actions,
-                    "nextvpred": vpred[0] * (1 - episode_start),
+                    "nextvpred": vpred * (1 - episode_start),
                     "ep_rets": ep_rets,
                     "ep_lens": ep_lens,
                     "ep_true_rets": ep_true_rets,
@@ -86,7 +86,7 @@ def traj_segment_generator(policy, env, horizon, reward_giver=None, gail=False):
             current_it_len = 0
         i = step % horizon
         observations[i] = observation
-        vpreds[i] = vpred[0]
+        vpreds[i] = vpred
         actions[i] = action[0]
         episode_starts[i] = episode_start
 

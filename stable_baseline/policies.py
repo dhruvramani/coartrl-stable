@@ -9,16 +9,12 @@ from gym.spaces import Discrete
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc, batch_to_seq, seq_to_batch, lstm
 from stable_baselines.common.distributions import make_proba_dist_type, CategoricalProbabilityDistribution, \
     MultiCategoricalProbabilityDistribution, DiagGaussianProbabilityDistribution, BernoulliProbabilityDistribution
-
-# NOTE : @dhruvramani
-from stable_baseline.input import observation_input
-
+from stable_baselines.common.input import observation_input
 
 
 def nature_cnn(scaled_images, **kwargs):
     """
     CNN from Nature paper.
-
     :param scaled_images: (TensorFlow Tensor) Image input placeholder
     :param kwargs: (dict) Extra keywords parameters for the convolutional layers of the CNN
     :return: (TensorFlow Tensor) The CNN output layer
@@ -37,18 +33,15 @@ def mlp_extractor(flat_observations, net_arch, act_fun):
     a value network. The ``net_arch`` parameter allows to specify the amount and size of the hidden layers and how many
     of them are shared between the policy network and the value network. It is assumed to be a list with the following
     structure:
-
     1. An arbitrary length (zero allowed) number of integers each specifying the number of units in a shared layer.
        If the number of ints is zero, there will be no shared layers.
     2. An optional dict, to specify the following non-shared layers for the value network and the policy network.
        It is formatted like ``dict(vf=[<value layer sizes>], pi=[<policy layer sizes>])``.
        If it is missing any of the keys (pi or vf), no non-shared layers (empty list) is assumed.
-
     For example to construct a network with one shared layer of size 55 followed by two non-shared layers for the value
     network of size 255 and a single non-shared layer of size 128 for the policy network, the following layers_spec
     would be used: ``[55, dict(vf=[255, 255], pi=[128])]``. A simple shared network topology with two layers of size 128
     would be specified as [128, 128].
-
     :param flat_observations: (tf.Tensor) The observations to base policy and value function on.
     :param net_arch: ([int or dict]) The specification of the policy and value networks.
         See above for details on its formatting.
@@ -94,7 +87,6 @@ def mlp_extractor(flat_observations, net_arch, act_fun):
 class BasePolicy(ABC):
     """
     The base policy object
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -152,7 +144,6 @@ class BasePolicy(ABC):
     @property
     def processed_obs(self):
         """tf.Tensor: processed observations, shape (self.n_batch, ) + self.ob_space.shape.
-
         The form of processing depends on the type of the observation space, and the parameters
         whether scale is passed to the constructor; see observation_input for more information."""
         return self._processed_obs
@@ -167,7 +158,6 @@ class BasePolicy(ABC):
         """
         Ensure that the user is not passing wrong keywords
         when using policy_kwargs.
-
         :param feature_extraction: (str)
         :param kwargs: (dict)
         """
@@ -184,7 +174,6 @@ class BasePolicy(ABC):
     def step(self, obs, state=None, mask=None):
         """
         Returns the policy for a single step
-
         :param obs: ([float] or [int]) The current observation of the environment
         :param state: ([float]) The last states (used in recurrent policies)
         :param mask: ([float]) The last masks (used in recurrent policies)
@@ -196,7 +185,6 @@ class BasePolicy(ABC):
     def proba_step(self, obs, state=None, mask=None):
         """
         Returns the action probability for a single step
-
         :param obs: ([float] or [int]) The current observation of the environment
         :param state: ([float]) The last states (used in recurrent policies)
         :param mask: ([float]) The last masks (used in recurrent policies)
@@ -208,7 +196,6 @@ class BasePolicy(ABC):
 class ActorCriticPolicy(BasePolicy):
     """
     Policy object that implements actor critic
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -219,9 +206,9 @@ class ActorCriticPolicy(BasePolicy):
     :param scale: (bool) whether or not to scale the input
     """
 
-    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, scale=False):
+    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, scale=False, obs_phs=None):
         super(ActorCriticPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse,
-                                                scale=scale)
+                                                scale=scale, obs_phs=obs_phs)
         self._pdtype = make_proba_dist_type(ac_space)
         self._policy = None
         self._proba_distribution = None
@@ -249,7 +236,7 @@ class ActorCriticPolicy(BasePolicy):
                                      for categorical in self.proba_distribution.categoricals]
             else:
                 self._policy_proba = []  # it will return nothing, as it is not implemented
-            self._value_flat = self.value_fn[:, 0]
+            self._value_flat = self.value_fn[0] #[:, 0] # - @dhruvramani
 
     @property
     def pdtype(self):
@@ -300,7 +287,6 @@ class ActorCriticPolicy(BasePolicy):
     def step(self, obs, state=None, mask=None, deterministic=False):
         """
         Returns the policy for a single step
-
         :param obs: ([float] or [int]) The current observation of the environment
         :param state: ([float]) The last states (used in recurrent policies)
         :param mask: ([float]) The last masks (used in recurrent policies)
@@ -313,7 +299,6 @@ class ActorCriticPolicy(BasePolicy):
     def value(self, obs, state=None, mask=None):
         """
         Returns the value for a single step
-
         :param obs: ([float] or [int]) The current observation of the environment
         :param state: ([float]) The last states (used in recurrent policies)
         :param mask: ([float]) The last masks (used in recurrent policies)
@@ -327,7 +312,6 @@ class RecurrentActorCriticPolicy(ActorCriticPolicy):
     Actor critic policy object uses a previous state in the computation for the current step.
     NOTE: this class is not limited to recurrent neural network policies,
     see https://github.com/hill-a/stable-baselines/issues/241
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -380,7 +364,6 @@ class RecurrentActorCriticPolicy(ActorCriticPolicy):
 class LstmPolicy(RecurrentActorCriticPolicy):
     """
     Policy object that implements actor critic, using LSTMs.
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -521,7 +504,6 @@ class LstmPolicy(RecurrentActorCriticPolicy):
 class FeedForwardPolicy(ActorCriticPolicy):
     """
     Policy object that implements actor critic, using a feed forward neural network.
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -542,7 +524,7 @@ class FeedForwardPolicy(ActorCriticPolicy):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, layers=None, net_arch=None,
                  act_fun=tf.tanh, cnn_extractor=nature_cnn, feature_extraction="cnn", **kwargs):
         super(FeedForwardPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse,
-                                                scale=True) # NOTE : @dhruvramani - scale=(feature_extraction == "cnn")
+                                                scale=(feature_extraction == "cnn"))
 
         self._kwargs_check(feature_extraction, kwargs)
 
@@ -555,7 +537,7 @@ class FeedForwardPolicy(ActorCriticPolicy):
 
         if net_arch is None:
             if layers is None:
-                layers = [32, 32] # NOTE : @dhruvramani - Changed from 64, 64
+                layers = [64, 64]
             net_arch = [dict(vf=layers, pi=layers)]
 
         with tf.variable_scope("model", reuse=reuse):
@@ -590,7 +572,6 @@ class FeedForwardPolicy(ActorCriticPolicy):
 class CnnPolicy(FeedForwardPolicy):
     """
     Policy object that implements actor critic, using a CNN (the nature CNN)
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -609,7 +590,6 @@ class CnnPolicy(FeedForwardPolicy):
 class CnnLstmPolicy(LstmPolicy):
     """
     Policy object that implements actor critic, using LSTMs with a CNN feature extraction
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -629,7 +609,6 @@ class CnnLstmPolicy(LstmPolicy):
 class CnnLnLstmPolicy(LstmPolicy):
     """
     Policy object that implements actor critic, using a layer normalized LSTMs with a CNN feature extraction
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -649,7 +628,6 @@ class CnnLnLstmPolicy(LstmPolicy):
 class MlpPolicy(FeedForwardPolicy):
     """
     Policy object that implements actor critic, using a MLP (2 layers of 64)
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -668,7 +646,6 @@ class MlpPolicy(FeedForwardPolicy):
 class MlpLstmPolicy(LstmPolicy):
     """
     Policy object that implements actor critic, using LSTMs with a MLP feature extraction
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -688,7 +665,6 @@ class MlpLstmPolicy(LstmPolicy):
 class MlpLnLstmPolicy(LstmPolicy):
     """
     Policy object that implements actor critic, using a layer normalized LSTMs with a MLP feature extraction
-
     :param sess: (TensorFlow session) The current TensorFlow session
     :param ob_space: (Gym Space) The observation space of the environment
     :param ac_space: (Gym Space) The action space of the environment
@@ -720,7 +696,6 @@ _policy_registry = {
 def get_policy_from_name(base_policy_type, name):
     """
     returns the registed policy from the base type and name
-
     :param base_policy_type: (BasePolicy) the base policy object
     :param name: (str) the policy name
     :return: (base_policy_type) the policy
@@ -736,7 +711,6 @@ def get_policy_from_name(base_policy_type, name):
 def register_policy(name, policy):
     """
     returns the registed policy from the base type and name
-
     :param name: (str) the policy name
     :param policy: (subclass of BasePolicy) the policy
     """

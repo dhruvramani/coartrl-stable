@@ -20,19 +20,29 @@ def argparser():
                         of model names inside primitive_dir loaded in order with primitive_envs \
                         eg. JacoToss.ICLR2019,JacoHit.ICLR2019')
     parser.add_argument('--eval_primitives', type=str2bool, default=True)
+    parser.add_argument('--prim_train', type=str, default='JacoToss-v1')
+
 
     parser.add_argument('--is_coart', type=str2bool, default=False)
     parser.add_argument('--coart_alpha', type=float, default=10.0)
     parser.add_argument('--load_coart_path', type=str, default="./log/JacoToss.toss_coartl_prim")
     parser.add_argument('--is_train', type=str2bool, default=False)
     parser.add_argument('--total_timesteps', type=int, default=int(1e7))
-    parser.add_argument('--max_eval_iters', type=int, default=int(1e4))
+    parser.add_argument('--max_eval_iters', type=int, default=int(1e2))
 
     parser.add_argument('--max_kl', type=float, default=0.01)
     parser.add_argument('--cg_iters', type=int, default=10)
     parser.add_argument('--cg_damping', type=float, default=0.1)
     parser.add_argument('--vf_stepsize', type=float, default=1e-3)
     parser.add_argument('--vf_iters', type=int, default=5)
+
+    parser.add_argument('--primitive_num_hid_layers', type=int, default=2)
+    parser.add_argument('--primitive_hid_size', type=int, default=32)
+    parser.add_argument('--primitive_activation', type=str, default='tanh',
+                        choices=['relu', 'elu', 'tanh'])
+    parser.add_argument('--primitive_fixed_var', type=str2bool, default=True)
+    parser.add_argument('--primitive_include_acc', type=str2bool, default=False)
+    parser.add_argument('--primitive_use_term', type=str2bool, default=False)
 
     parser.add_argument('--render', type=str2bool, default=True, help='Render frames')
     parser.add_argument('--policy_dir', type=str, default='./policies')

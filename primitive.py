@@ -5,13 +5,14 @@ import numpy as np
 
 from util import make_env
 
-from stable_baseline.policies import MlpPolicy
+#from stable_baseline.policies import MlpPolicy
 from stable_baseline.trpo_mpi import TRPO
+from primitive_policy import PrimitivePolicy
 
-def learn_primitive(env, config, save_path):
+def learn_primitive(env, config, save_path, env_name):
     print("Training Primitive : ", save_path.split("/")[-1])
-    model = TRPO(MlpPolicy, env, max_kl=config.max_kl, cg_iters=config.cg_iters,
-                 cg_damping=config.cg_damping, vf_stepsize=config.vf_stepsize, vf_iters=config.vf_iters)
+    model = TRPO(PrimitivePolicy, env, max_kl=config.max_kl, cg_iters=config.cg_iters,
+                 cg_damping=config.cg_damping, vf_stepsize=config.vf_stepsize, vf_iters=config.vf_iters, config=config, env_name=env_name)
 
     model.learn(total_timesteps=config.total_timesteps)
     model.save(save_path)
@@ -21,11 +22,12 @@ def get_primitives(config):
     primitives = []
     for i, p_path in enumerate(config.primitive_paths):
         path = os.path.expanduser(os.path.join(config.policy_dir, p_path))
+        env_name = config.primitive_envs[i]
         if(os.path.exists(path)):
             model = TRPO.load(path)
-        else :
+        elif(env_name == config.prim_train):
             env = make_env(config.primitive_envs[i], config)
-            model = learn_primitive(env, config, path)
+            model = learn_primitive(env, config, path, env_name)
         primitives.append(model)
 
     return primitives

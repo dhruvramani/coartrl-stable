@@ -17,8 +17,8 @@ def run(config):
     primitives = get_primitives(config)
 
     if(config.eval_primitives):
-        for i, p_policy in enumerate([primitives[0]]):
-            print("Evaluating Primitive : ", config.primitive_envs[i])
+        for i, p_policy in enumerate(primitives):
+            print("Evaluating Primitive for Env. ", config.primitive_envs[i])
             evaluate_primtive(env, p_policy, config)
 
     if(config.is_coart):

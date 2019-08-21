@@ -1,4 +1,5 @@
 import logging
+import tensorflow as tf
 from baselines.common.atari_wrappers import TransitionEnvWrapper
 
 def make_env(env_name, config=None):
@@ -12,3 +13,17 @@ def make_env(env_name, config=None):
 
     env = TransitionEnvWrapper(env)
     return env
+
+def activation(activation):
+    if activation == 'relu':
+        return tf.nn.relu
+    elif activation == 'elu':
+        return tf.nn.elu
+    elif activation == 'leaky':
+        return tf.contrib.keras.layers.LeakyReLU(0.2)
+    elif activation == 'tanh':
+        return tf.tanh
+    elif activation == 'sigmoid':
+        return tf.sigmoid
+    else:
+        raise NotImplementedError('{} is not implemented'.format(activation))

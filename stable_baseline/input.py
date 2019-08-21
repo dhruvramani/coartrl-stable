@@ -2,15 +2,13 @@ import numpy as np
 import tensorflow as tf
 from gym.spaces import Discrete, Box, MultiBinary, MultiDiscrete
 
-# NOTE: @dhruvramani
-from baselines.common.mpi_running_mean_std import RunningMeanStd
-
-
 
 def observation_input(ob_space, batch_size=None, name='Ob', scale=False):
     """
     Build observation input with encoding depending on the observation space type
+
     When using Box ob_space, the input will be normalized between [1, 0] on the bounds ob_space.low and ob_space.high.
+
     :param ob_space: (Gym Space) The observation space
     :param batch_size: (int) batch size for input
                        (default is None, so that resulting input placeholder can take tensors with any batch size)
@@ -32,14 +30,7 @@ def observation_input(ob_space, batch_size=None, name='Ob', scale=False):
            np.any((ob_space.high - ob_space.low) != 0)):
 
             # equivalent to processed_observations / 255.0 when bounds are set to [255, 0]
-            # NOTE : @dhruvramani - Obs normalization
-
-            ob_rms = RunningMeanStd(shape=tf.shape(processed_observations))
-            processed_observations = (processed_observations - ob_rms.mean) / ob_rms.std
-            processed_observations = tf.clip_by_value(processed_observations, -5.0, 5.0)
-            #flat_observations = tf.concat(flat_observations, -1)
-
-            #processed_observations = ((processed_observations - ob_space.low) / (ob_space.high - ob_space.low))
+            processed_observations = ((processed_observations - ob_space.low) / (ob_space.high - ob_space.low))
         return observation_ph, processed_observations
 
     elif isinstance(ob_space, MultiBinary):
