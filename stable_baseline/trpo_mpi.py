@@ -8,7 +8,7 @@ import tensorflow as tf
 import numpy as np
 
 import baselines.common.tf_util as tf_util
-from stable_baselines.common import explained_variance, zipsame, dataset, fmt_row, colorize, ActorCriticRLModel,\
+from stable_baselines.common import explained_variance, zipsame, dataset, fmt_row, colorize, ActorCriticRLModel, \
     SetVerbosity, TensorboardWriter
 from stable_baselines import logger
 from baselines.common.mpi_adam import MpiAdam
@@ -16,10 +16,9 @@ from baselines.common.cg import cg
 from stable_baselines.a2c.utils import total_episode_reward_logger
 
 # NOTE : @dhruvramani
-from stable_baseline.policies import ActorCriticPolicy
-#from stable_baseline.base_class import ActorCriticRLModel
+from util import *
+from stable_baseline.policies import ActorCriticPolicy 
 from stable_baseline.trpo_utils import traj_segment_generator, add_vtarg_and_adv, flatten_lists
-
 
 class TRPO(ActorCriticRLModel):
     """
@@ -44,7 +43,7 @@ class TRPO(ActorCriticRLModel):
         WARNING: this logging can take a lot of space quickly
     """
 
-    def __init__(self, policy, env, config, env_name, gamma=0.99, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, lam=0.98,
+    def __init__(self, policy, env, config, env_name, save_path, gamma=0.99, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, lam=0.98,
                  entcoeff=0.0, cg_damping=1e-2, vf_stepsize=3e-4, vf_iters=3, verbose=0, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
         super(TRPO, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,
@@ -97,6 +96,7 @@ class TRPO(ActorCriticRLModel):
         self.episode_reward = None
         self.config = config
         self.env_name = env_name
+        self.save_path = save_path
 
         if _init_setup_model:
             self.setup_model()
@@ -136,6 +136,8 @@ class TRPO(ActorCriticRLModel):
             # Construct network for new policy
             # @dhruvramani NOTE : Modified this
             self.policy_pi = self.policy(env=self.env, name="%s/pi" % self.env_name, ob_env_name=self.env_name, config=self.config, n_env=self.n_envs)
+            policy_vars = self.policy_pi.get_variables()
+            policy_path = load_model(self.save_path, policy_vars)
 
             # Network for old policy
             # @dhruvramani NOTE : Modified this

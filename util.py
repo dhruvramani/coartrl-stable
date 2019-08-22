@@ -1,5 +1,7 @@
+import os
 import logging
 import tensorflow as tf
+import baselines.common.tf_util as tf_util
 from baselines.common.atari_wrappers import TransitionEnvWrapper
 
 def make_env(env_name, config=None):
@@ -27,3 +29,18 @@ def activation(activation):
         return tf.sigmoid
     else:
         raise NotImplementedError('{} is not implemented'.format(activation))
+
+def load_model(load_model_path, var_list=None):
+    if os.path.isdir(load_model_path):
+        sess = tf_util.single_threaded_session(gpu=False)
+        sess.__enter__()
+        ckpt_path = tf.train.latest_checkpoint(load_model_path)
+    else:
+        ckpt_path = load_model_path
+        os.mkdir(ckpt_path)
+        tf_util.initialize()
+        ckpt_path = ckpt_path + "/" + ckpt_path.split("/")[-1]
+        tf_util.save_state(ckpt_path, var_list)
+    if ckpt_path:
+        tf_util.load_state(ckpt_path, var_list)
+    return ckpt_path
