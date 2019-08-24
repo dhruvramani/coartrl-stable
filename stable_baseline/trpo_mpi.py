@@ -346,13 +346,14 @@ class TRPO(ActorCriticRLModel):
                         atarg = (atarg - atarg.mean()) / atarg.std()  # standardized advantage function estimate
 
                         # true_rew is the reward without discount
+                        '''
                         if writer is not None:
                             self.episode_reward = total_episode_reward_logger(self.episode_reward,
                                                                               seg["true_rewards"].reshape(
                                                                                   (self.n_envs, -1)),
                                                                               seg["dones"].reshape((self.n_envs, -1)),
                                                                               writer, self.num_timesteps)
-
+                        '''
                         args = ob_list + ob_list + [seg["actions"], atarg]
                         args_t = ob_list + ob_list + [seg["actions"], atarg, tdlamret]
 
@@ -466,10 +467,10 @@ class TRPO(ActorCriticRLModel):
                         logger.log(fmt_row(13, np.mean(d_losses, axis=0)))
 
                         # lr: lengths and rewards
-                        lr_local = (seg["ep_lens"], seg["ep_rets"], seg["ep_true_rets"])  # local values
+                        lr_local = (seg["ep_lens"], seg["ep_rets"]) #, seg["ep_true_rets"])  # local values
                         list_lr_pairs = MPI.COMM_WORLD.allgather(lr_local)  # list of tuples
-                        lens, rews, true_rets = map(flatten_lists, zip(*list_lr_pairs))
-                        true_reward_buffer.extend(true_rets)
+                        lens, rews = map(flatten_lists, zip(*list_lr_pairs))
+                        #true_reward_buffer.extend(true_rets)
                     else:
                         # lr: lengths and rewards
                         lr_local = (seg["ep_lens"], seg["ep_rets"])  # local values
@@ -481,8 +482,8 @@ class TRPO(ActorCriticRLModel):
                     if len(len_buffer) > 0:
                         logger.record_tabular("EpLenMean", np.mean(len_buffer))
                         logger.record_tabular("EpRewMean", np.mean(reward_buffer))
-                    if self.using_gail:
-                        logger.record_tabular("EpTrueRewMean", np.mean(true_reward_buffer))
+                    #if self.using_gail:
+                    #    logger.record_tabular("EpTrueRewMean", np.mean(true_reward_buffer))
                     logger.record_tabular("EpThisIter", len(lens))
                     episodes_so_far += len(lens)
                     current_it_timesteps = MPI.COMM_WORLD.allreduce(seg["total_timestep"])

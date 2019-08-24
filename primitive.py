@@ -27,7 +27,7 @@ def get_primitives(config):
         path = os.path.expanduser(os.path.join(config.policy_dir, p_path))
         env_name = config.primitive_envs[i]
         env = make_env(config.primitive_envs[i], config)
-        
+
         model = None
         if(os.path.exists(path)):
             model = load_primitive(env, config, path, env_name)
