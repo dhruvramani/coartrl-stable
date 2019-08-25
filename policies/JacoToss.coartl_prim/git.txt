@@ -1,0 +1,30 @@
+a3ed3504cdd0f2fdd2573a6cc8ef31b0971b4174
+diff --git a/rl/config.py b/rl/config.py
+index e4a610f..0b88b4d 100644
+--- a/rl/config.py
++++ b/rl/config.py
+@@ -16,11 +16,11 @@ def argparser():
+                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+ 
+     # environment
+-    parser.add_argument('--env', help='environment ID', type=str, default='JacoServe-v1')
++    parser.add_argument('--env', help='environment ID', type=str, default='JacoToss-v1')
+     parser.add_argument('--env_args', type=str, default=None, help='(optional) arguments for environment')
+ 
+     # architecture (rl or hrl)
+-    parser.add_argument('--hrl', type=str2bool, default=True, help='Set to False to train a \
++    parser.add_argument('--hrl', type=str2bool, default=False, help='Set to False to train a \
+                         primitive policy or True to train transition policies for a complex skill')
+ 
+     # vanilla mlp policy
+@@ -150,8 +150,8 @@ def argparser():
+     parser.add_argument('--vf_iters', type=int, default=5)
+ 
+     # misc
+-    parser.add_argument('--prefix', type=str, default="coartl_hrl", help='Prefix for training files')
+-    parser.add_argument('--render', type=str2bool, default=True, help='Render frames')
++    parser.add_argument('--prefix', type=str, default="coartl_prim", help='Prefix for training files')
++    parser.add_argument('--render', type=str2bool, default=False, help='Render frames')
+     parser.add_argument('--record', type=str2bool, default=False, help='Record video')
+     parser.add_argument('--video_prefix', type=str, default=None)
+     parser.add_argument('--log_dir', type=str, default='log')

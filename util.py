@@ -32,8 +32,8 @@ def activation(activation):
 
 def load_model(load_model_path, var_list=None):
     if os.path.isdir(load_model_path):
-        sess = tf_util.single_threaded_session(gpu=False)
-        sess.__enter__()
+        #init = tf.global_variables_initializer()
+        #sess.run(init)
         ckpt_path = tf.train.latest_checkpoint(load_model_path)
     else:
         ckpt_path = load_model_path

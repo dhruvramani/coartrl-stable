@@ -13,10 +13,10 @@ def str2list(v):
 def argparser():
     parser = argparse.ArgumentParser("Policy Stiching Framework",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--env', help='environment ID', type=str, default='JacoToss-v1')
+    parser.add_argument('--env', help='environment ID', type=str, default='JacoHit-v1')
     parser.add_argument('--primitive_envs', type=str2list, default="JacoToss-v1,JacoHit-v1", help='Separated list \
                         of primitive envs eg. JacoToss-v1,JacoHit-v1')
-    parser.add_argument('--primitive_paths', type=str2list, default="JacoToss.toss_coartl_prim,JacoHit.hit_coartl_prim", help='Separated list \
+    parser.add_argument('--primitive_paths', type=str2list, default="JacoToss.coartl_prim,JacoHit.coartl_prim", help='Separated list \
                         of model names inside primitive_dir loaded in order with primitive_envs \
                         eg. JacoToss.ICLR2019,JacoHit.ICLR2019')
     parser.add_argument('--eval_primitives', type=str2bool, default=True)

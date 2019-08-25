@@ -1,7 +1,7 @@
 import os
 import sys
 
-import baselines.common.tf_util as U
+import baselines.common.tf_util as tf_util
 from baselines.common import set_global_seeds
 from baselines import logger
 from baselines.common.atari_wrappers import TransitionEnvWrapper
@@ -11,8 +11,9 @@ from util import make_env
 
 from primitive import get_primitives, evaluate_primtive
 
-
 def run(config):
+    sess = tf_util.single_threaded_session(gpu=False)
+    sess.__enter__()
     env = make_env(config.env, config)
     primitives = get_primitives(config)
 

@@ -1,6 +1,0 @@
-python3 -m rl.main --prefix toss_coartl_prim --env JacoToss-v1 --hrl False --num_rollouts 10000 --is_train False --record True
-python3 -m rl.main --prefix toss_coartl_prim --env JacoToss-v1 --hrl False --num_rollouts 10000 --is_train False --record True
-python3 -m rl.main --prefix toss_coartl_prim --env JacoToss-v1 --hrl False --num_rollouts 10000 --is_train False --record True
-python3 -m rl.main --prefix toss_coartl_prim --env JacoToss-v1 --hrl False --num_rollouts 10000 --is_train False --record True
-python3 -m rl.main --prefix toss_coartl_prim --env JacoToss-v1 --hrl False --num_rollouts 10000 --is_train False --record True
-python3 -m rl.main --prefix toss_coartl_prim --env JacoToss-v1 --hrl False --num_rollouts 10000 --is_train False --record True
