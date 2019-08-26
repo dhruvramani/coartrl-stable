@@ -9,7 +9,7 @@ from primitive_policy import PrimitivePolicy
 
 def learn_primitive(env, config, save_path, env_name):
     print("Training Primitive : ", save_path.split("/")[-1])
-    model = TRPO(PrimitivePolicy, env, max_kl=config.max_kl, cg_iters=config.cg_iters,
+    model = TRPO(PrimitivePolicy, env, max_kl=config.max_kl, cg_iters=config.cg_iters, timesteps_per_batch=config.num_rollouts,
                  cg_damping=config.cg_damping, vf_stepsize=config.vf_stepsize, vf_iters=config.vf_iters, config=config, env_name=env_name, save_path=save_path)
 
     model.learn(total_timesteps=config.total_timesteps)

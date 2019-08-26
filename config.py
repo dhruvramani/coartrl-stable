@@ -21,7 +21,7 @@ def argparser():
     parser.add_argument('--primitive_paths', type=str2list, default="JacoToss.coartl_prim,JacoHit.coartl_prim", help='Separated list \
                         of model names inside primitive_dir loaded in order with primitive_envs \
                         eg. JacoToss.ICLR2019,JacoHit.ICLR2019')
-    parser.add_argument('--eval_primitives', type=str2bool, default=True)
+    parser.add_argument('--eval_primitives', type=str2bool, default=False)
     parser.add_argument('--prim_train', type=str, default='JacoToss-v1', help="Specifies which primitive to train on the current run")
 
     parser.add_argument('--primitive_num_hid_layers', type=int, default=2)
@@ -40,6 +40,8 @@ def argparser():
     parser.add_argument('--is_train', type=str2bool, default=False)
     parser.add_argument('--eval_all', type=str2bool, default=True)
 
+    parser.add_argument('--bridge_kl', type=float, default=0.1)
+
     # --- TRPO ---
     parser.add_argument('--max_kl', type=float, default=0.01)
     parser.add_argument('--cg_iters', type=int, default=10)
@@ -48,9 +50,10 @@ def argparser():
     parser.add_argument('--vf_iters', type=int, default=5)
 
     # --- Misc ---
-    parser.add_argument('--total_timesteps', type=int, default=int(1e4))
+    parser.add_argument('--num_rollouts', type=int, default=int(256))
+    parser.add_argument('--total_timesteps', type=int, default=int(1e6))
     parser.add_argument('--max_eval_iters', type=int, default=int(1e3))
-    parser.add_argument('--render', type=str2bool, default=True, help='Render frames')
+    parser.add_argument('--render', type=str2bool, default=False, help='Render frames')
     parser.add_argument('--policy_dir', type=str, default='./policies')
     parser.add_argument('--log_dir', type=str, default='./log')
     parser.add_argument('--debug', type=str2bool, default=False, help='See debugging info')

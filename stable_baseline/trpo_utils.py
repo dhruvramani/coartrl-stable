@@ -130,7 +130,7 @@ def traj_segment_generator(policy, env, horizon, reward_giver=None, gail=False):
         step += 1
 '''
 
-def traj_segment_generator_bridge(primitives, env, horizon, reward_giver=None, gail=False):
+def traj_segment_generator_bridge(policy, primitives, env, horizon, config, reward_giver=None, gail=False):
     t = 0
     ac = env.action_space.sample()
     done = False
@@ -156,11 +156,9 @@ def traj_segment_generator_bridge(primitives, env, horizon, reward_giver=None, g
     pi = primitives[curr_prim] # NOTE : @dhruvramani - pi depicts the current primitive
 
     while True:
-        if(pi.is_terminate(ob, init=True, env=env)):
-            curr_prim += 1
-            curr_prim = curr_prim % num_primitives
-            pi = primitives[curr_prim]
-            print("Changed Policy")
+        if(curr_prim == 0 and pi.is_terminate(ob, init=True, env=env)):
+            curr_prim = 1
+            pi = policy
 
         ac, vpred, _, _ = pi.step(ob)
 
@@ -183,18 +181,22 @@ def traj_segment_generator_bridge(primitives, env, horizon, reward_giver=None, g
             curr_prim = 0
             pi = primitives[curr_prim] 
             vpred = pi.value(ob)
+
         obs.append(ob)
         vpreds.append(vpred)
         acs.append(ac)
 
         old_ob = ob
         ob, rew, done, info = env.step(ac)
-        env.render()
+        
+        if(config.render):
+            env.render()
+
         for key, value in info.items():
             reward_info[key].append(value)
 
-        if(curr_prim != 0):
-            rew = pi.value(ob) - pi.value(old_ob)
+        if(curr_prim == 1):
+            rew = primitives[curr_prim].value(ob) - primitives[curr_prim].value(old_ob)
 
         rews.append(rew)
         dones.append(done)
@@ -214,7 +216,7 @@ def traj_segment_generator_bridge(primitives, env, horizon, reward_giver=None, g
                     else:
                         ep_reward[key].append(np.sum(value))
 
-def traj_segment_generator(pi, env, horizon, reward_giver=None, gail=False):
+def traj_segment_generator(pi, env, horizon, config, reward_giver=None, gail=False):
     t = 0
     ac = env.action_space.sample()
     done = False
@@ -259,6 +261,10 @@ def traj_segment_generator(pi, env, horizon, reward_giver=None, gail=False):
         acs.append(ac)
 
         ob, rew, done, info = env.step(ac)
+
+        if(config.render):
+            env.render()
+
         for key, value in info.items():
             reward_info[key].append(value)
         rews.append(rew)

@@ -19,7 +19,7 @@ def get_bridge_policy(env, primitives, config):
 
 	if(config.is_train or model is None):
 		print("Training Bridge Policy")
-		trainer = TRPO(PrimitivePolicy, env, primitives=primitives, config=config, env_name=config.bridge_path, save_path=path,
+		trainer = TRPO(PrimitivePolicy, env, primitives=primitives, config=config, env_name=config.bridge_path, save_path=path, timesteps_per_batch=config.num_rollouts,
 			max_kl=config.max_kl, cg_iters=config.cg_iters, cg_damping=config.cg_damping, vf_stepsize=config.vf_stepsize, vf_iters=config.vf_iters)
 		trainer.learn(total_timesteps=config.total_timesteps)
 		model = trainer.policy_pi

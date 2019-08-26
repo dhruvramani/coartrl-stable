@@ -43,7 +43,7 @@ class TRPO(ActorCriticRLModel):
         WARNING: this logging can take a lot of space quickly
     """
 
-    def __init__(self, policy, env, config, env_name, save_path, primitives=None, gamma=0.99, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, lam=0.98,
+    def __init__(self, policy, env, config, env_name, save_path, primitives=None, gamma=0.99, timesteps_per_batch=256, max_kl=0.01, cg_iters=10, lam=0.98,
                  entcoeff=0.0, cg_damping=1e-2, vf_stepsize=3e-4, vf_iters=3, verbose=0, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
         super(TRPO, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,
@@ -157,6 +157,9 @@ class TRPO(ActorCriticRLModel):
                 observation = self.policy_pi.obs_ph
                 action = self.policy_pi.pdtype.sample_placeholder([None])
 
+                # NOTE : @dhruvramani
+                primitive_kl = tf.reduce_mean(self.primitives[1].pd.kl(self.policy_pi.pd))
+
                 kloldnew = old_policy.proba_distribution.kl(self.policy_pi.proba_distribution)
                 ent = self.policy_pi.proba_distribution.entropy()
                 meankl = tf.reduce_mean(kloldnew)
@@ -170,7 +173,8 @@ class TRPO(ActorCriticRLModel):
                                old_policy.proba_distribution.logp(action))
                 surrgain = tf.reduce_mean(ratio * atarg)
 
-                optimgain = surrgain + entbonus
+                optimgain = surrgain + entbonus #+ self.config.bridge_kl * primitive_kl
+
                 losses = [optimgain, meankl, entbonus, surrgain, meanent]
                 self.loss_names = ["optimgain", "meankl", "entloss", "surrgain", "entropy"]
 
@@ -230,7 +234,8 @@ class TRPO(ActorCriticRLModel):
                     out /= self.nworkers
                     return out
 
-                tf_util.initialize()
+                # NOTE : @dhruvramani - don't uncomment
+                #tf_util.initialize()
 
                 th_init = self.get_flat()
                 MPI.COMM_WORLD.Bcast(th_init, root=0)
@@ -287,9 +292,9 @@ class TRPO(ActorCriticRLModel):
 
             with self.sess.as_default():
                 if(self.primitives is None):
-                    seg_gen = traj_segment_generator(self.policy_pi, self.env, self.timesteps_per_batch, reward_giver=self.reward_giver, gail=self.using_gail)
+                    seg_gen = traj_segment_generator(self.policy_pi, self.env, self.timesteps_per_batch, self.config, reward_giver=self.reward_giver, gail=self.using_gail)
                 else :
-                    seg_gen = traj_segment_generator_bridge(self.primitives, self.env, self.timesteps_per_batch, reward_giver=self.reward_giver, gail=self.using_gail)
+                    seg_gen = traj_segment_generator_bridge(self.policy_pi, self.primitives, self.env, self.timesteps_per_batch, self.config, reward_giver=self.reward_giver, gail=self.using_gail)
 
                 episodes_so_far = 0
                 timesteps_so_far = 0
