@@ -158,7 +158,10 @@ def traj_segment_generator_bridge(policy, primitives, env, horizon, config, rewa
     while True:
         if(curr_prim == 0 and pi.is_terminate(ob, init=True, env=env)):
             curr_prim = 1
-            pi = policy
+            if(config.stitch_naive):
+                pi = primitives[curr_prim]
+            else :
+                pi = policy
 
         ac, vpred, _, _ = pi.step(ob)
 

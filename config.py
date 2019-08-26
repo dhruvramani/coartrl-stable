@@ -41,6 +41,7 @@ def argparser():
     parser.add_argument('--eval_all', type=str2bool, default=True)
 
     parser.add_argument('--bridge_kl', type=float, default=0.1)
+    parser.add_argument('--stitch_naive', type=str2bool, default=False)
 
     # --- TRPO ---
     parser.add_argument('--max_kl', type=float, default=0.01)

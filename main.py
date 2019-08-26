@@ -25,9 +25,8 @@ def run(config):
 
     if(config.is_coart):
         bridge_policy = get_bridge_policy(env, primitives, config)
-        #coartl_value  = get_coartl_value(env, primitives, bridge_policy, config)
-        #final_policy  = get_coartl_policy(env, coartl_value, config)
-        #evaluate_policy(env, final_policy, )
+        #coartl_sac = get_coartl_sac(env, primitives, bridge_policy, config)
+        #evaluate_policy(env, coartl_sac, config)
 
     env.close()
 
