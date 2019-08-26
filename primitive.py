@@ -15,8 +15,10 @@ def learn_primitive(env, config, save_path, env_name):
     model.learn(total_timesteps=config.total_timesteps)
     return model.policy_pi
 
-def load_primitive(env, config, path, env_name):
-   policy = PrimitivePolicy(env=env, name="%s/pi" % env_name, ob_env_name=env_name, config=config, n_env=1)
+def load_primitive(env, config, path, env_name, ob_env_name=None):
+   if(ob_env_name is None):
+      ob_env_name = env_name
+   policy = PrimitivePolicy(env=env, name="%s/pi" % env_name, ob_env_name=ob_env_name, config=config, n_env=1)
    policy_vars = policy.get_variables()
    policy_path = load_model(path, policy_vars)
    return policy
@@ -27,8 +29,8 @@ def get_primitives(config):
         path = os.path.expanduser(os.path.join(config.policy_dir, p_path))
         env_name = config.primitive_envs[i]
         env = make_env(config.primitive_envs[i], config)
-
         model = None
+
         if(os.path.exists(path)):
             model = load_primitive(env, config, path, env_name)
         elif(env_name == config.prim_train):
@@ -38,20 +40,3 @@ def get_primitives(config):
             primitives.append(model)
 
     return primitives
-
-def evaluate_primtive(env, policy, config):
-    obs = env.reset()
-    count = 0
-    rewards = []
-    while count < config.max_eval_iters:
-        action, _states, _, _ = policy.step(obs)
-        obs, reward, done, info = env.step(action)
-
-        rewards.append(np.float(reward))
-        if(config.render):
-            env.render()
-        if(done == True):
-            obs = env.reset()
-        count += 1
-    print("Max Reward : ", max(rewards))
-    print("Average Reward : ", statistics.mean(rewards))

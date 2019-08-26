@@ -130,6 +130,90 @@ def traj_segment_generator(policy, env, horizon, reward_giver=None, gail=False):
         step += 1
 '''
 
+def traj_segment_generator_bridge(primitives, env, horizon, reward_giver=None, gail=False):
+    t = 0
+    ac = env.action_space.sample()
+    done = False
+    rew = 0.0
+    ob = env.reset()
+
+    cur_ep_ret = 0
+    cur_ep_len = 0
+    ep_rets = []
+    ep_lens = []
+    ep_reward = defaultdict(list)
+
+    # Initialize history arrays
+    obs = []
+    acs = []
+    vpreds = []
+    rews = []
+    dones = []
+    reward_info = defaultdict(list)
+
+    num_primitives = len(primitives)
+    curr_prim = 0
+    pi = primitives[curr_prim] # NOTE : @dhruvramani - pi depicts the current primitive
+
+    while True:
+        if(pi.is_terminate(ob, init=True, env=env)):
+            curr_prim += 1
+            curr_prim = curr_prim % num_primitives
+            pi = primitives[curr_prim]
+            print("Changed Policy")
+
+        ac, vpred, _, _ = pi.step(ob)
+
+        if t > 0 and t % horizon == 0:
+            dicti = {"observations": obs, "rewards": rews, "vpred": vpreds, "nextvpred": vpred * (1 - done),
+                     "dones": dones, "actions": acs, "ep_rets": ep_rets, "ep_lens": ep_lens, "total_timestep": t, }
+            for key, value in ep_reward.items():
+                dicti.update({"ep_{}".format(key): value})
+            yield {key: np.copy(val) for key, val in dicti.items()}
+            ep_rets = []
+            ep_lens = []
+            ep_reward = defaultdict(list)
+            obs = []
+            rews = []
+            vpreds = []
+            dones = []
+            acs = []
+            t = 0
+            env.reset()
+            curr_prim = 0
+            pi = primitives[curr_prim] 
+            vpred = pi.value(ob)
+        obs.append(ob)
+        vpreds.append(vpred)
+        acs.append(ac)
+
+        old_ob = ob
+        ob, rew, done, info = env.step(ac)
+        env.render()
+        for key, value in info.items():
+            reward_info[key].append(value)
+
+        if(curr_prim != 0):
+            rew = pi.value(ob) - pi.value(old_ob)
+
+        rews.append(rew)
+        dones.append(done)
+        cur_ep_ret += rew
+        cur_ep_len += 1
+        t += 1
+
+        if done:
+            ep_rets.append(cur_ep_ret)
+            ep_lens.append(cur_ep_len)
+            curr_prim = 0
+            pi = primitives[curr_prim] 
+            for key, value in reward_info.items():
+                if isinstance(value[0], (int, float, np.bool_)):
+                    if '_mean' in key:
+                        ep_reward[key].append(np.mean(value))
+                    else:
+                        ep_reward[key].append(np.sum(value))
+
 def traj_segment_generator(pi, env, horizon, reward_giver=None, gail=False):
     t = 0
     ac = env.action_space.sample()
@@ -192,29 +276,7 @@ def traj_segment_generator(pi, env, horizon, reward_giver=None, gail=False):
                         ep_reward[key].append(np.mean(value))
                     else:
                         ep_reward[key].append(np.sum(value))
-            '''
-            if not config.is_train or training_inference:
-                dicti = {"ep_reward": ep_rets, "ep_length": ep_lens}
-                if config.is_collect_state:
-                    dicti["obs"] = obs
-                for key, value in ep_reward.items():
-                    dicti.update({"ep_{}".format(key): value})
-                yield {key: np.copy(val) for key, val in dicti.items()}
-                ep_rets = []
-                ep_lens = []
-                ep_reward = defaultdict(list)
-                obs = []
-                rews = []
-                vpreds = []
-                dones = []
-                acs = []
-                t = 0
-            reward_info = defaultdict(list)
-            cur_ep_ret = 0
-            cur_ep_len = 0
-            if(config.num_rollouts > 1):
-                ob = env.reset()
-            '''
+
 '''
 def add_vtarg_and_adv(seg, gamma, lam):
     """

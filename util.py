@@ -38,7 +38,7 @@ def load_model(load_model_path, var_list=None):
     else:
         ckpt_path = load_model_path
         os.mkdir(ckpt_path)
-        tf_util.initialize()
+        tf_util.initialize_vars(var_list)
         ckpt_path = ckpt_path + "/" + ckpt_path.split("/")[-1]
         tf_util.save_state(ckpt_path, var_list)
     if ckpt_path:

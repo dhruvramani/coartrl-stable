@@ -18,7 +18,7 @@ from stable_baselines.a2c.utils import total_episode_reward_logger
 # NOTE : @dhruvramani
 from util import *
 from stable_baseline.policies import ActorCriticPolicy 
-from stable_baseline.trpo_utils import traj_segment_generator, add_vtarg_and_adv, flatten_lists
+from stable_baseline.trpo_utils import *
 
 class TRPO(ActorCriticRLModel):
     """
@@ -43,7 +43,7 @@ class TRPO(ActorCriticRLModel):
         WARNING: this logging can take a lot of space quickly
     """
 
-    def __init__(self, policy, env, config, env_name, save_path, gamma=0.99, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, lam=0.98,
+    def __init__(self, policy, env, config, env_name, save_path, primitives=None, gamma=0.99, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, lam=0.98,
                  entcoeff=0.0, cg_damping=1e-2, vf_stepsize=3e-4, vf_iters=3, verbose=0, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
         super(TRPO, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,
@@ -97,6 +97,7 @@ class TRPO(ActorCriticRLModel):
         self.config = config
         self.env_name = env_name
         self.save_path = save_path
+        self.primitives = primitives
 
         if _init_setup_model:
             self.setup_model()
@@ -123,10 +124,10 @@ class TRPO(ActorCriticRLModel):
 
             #self.graph = tf.Graph()
             #with self.graph.as_default():
-            self.sess = tf_util.single_threaded_session(gpu=False)
-            init = tf.global_variables_initializer()
-            self.sess.run(init)
-            self.sess.__enter__()
+            self.sess = tf_util.get_session()
+            #init = tf.global_variables_initializer()
+            #self.sess.run(init)
+            #self.sess.__enter__()
 
             if self.using_gail:
                 self.reward_giver = TransitionClassifier(self.observation_space, self.action_space,
@@ -135,14 +136,19 @@ class TRPO(ActorCriticRLModel):
 
             # Construct network for new policy
             # @dhruvramani NOTE : Modified this
-            self.policy_pi = self.policy(env=self.env, name="%s/pi" % self.env_name, ob_env_name=self.env_name, config=self.config, n_env=self.n_envs)
-            policy_vars = self.policy_pi.get_variables()
-            policy_path = load_model(self.save_path, policy_vars)
+            ob_env_name = self.env_name
+            if(self.primitives is not None):
+                ob_env_name = self.config.env
+
+            self.policy_pi = self.policy(env=self.env, name="%s/pi" % self.env_name, ob_env_name=ob_env_name, config=self.config, n_env=self.n_envs)
 
             # Network for old policy
             # @dhruvramani NOTE : Modified this
             with tf.variable_scope("oldpi", reuse=False):
-                old_policy = self.policy(env=self.env, name="%s/oldpi" % self.env_name, ob_env_name=self.env_name, config=self.config, n_env=self.n_envs)
+                old_policy = self.policy(env=self.env, name="%s/oldpi" % self.env_name, ob_env_name=ob_env_name, config=self.config, n_env=self.n_envs)
+
+            policy_vars = self.policy_pi.get_variables() + old_policy.get_variables()
+            policy_path = load_model(self.save_path, policy_vars)
 
             with tf.variable_scope("loss", reuse=False):
                 atarg = tf.placeholder(dtype=tf.float32, shape=[None])  # Target advantage function (if applicable)
@@ -280,8 +286,10 @@ class TRPO(ActorCriticRLModel):
             self._setup_learn(seed)
 
             with self.sess.as_default():
-                seg_gen = traj_segment_generator(self.policy_pi, self.env, self.timesteps_per_batch,
-                                                 reward_giver=self.reward_giver, gail=self.using_gail)
+                if(self.primitives is None):
+                    seg_gen = traj_segment_generator(self.policy_pi, self.env, self.timesteps_per_batch, reward_giver=self.reward_giver, gail=self.using_gail)
+                else :
+                    seg_gen = traj_segment_generator_bridge(self.primitives, self.env, self.timesteps_per_batch, reward_giver=self.reward_giver, gail=self.using_gail)
 
                 episodes_so_far = 0
                 timesteps_so_far = 0

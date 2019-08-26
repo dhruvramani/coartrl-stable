@@ -222,6 +222,10 @@ def initialize():
     get_session().run(tf.variables_initializer(new_variables))
     ALREADY_INITIALIZED.update(new_variables)
 
+def initialize_vars(var_list):
+    """Initialize all the uninitialized variables in the global scope."""
+    get_session().run(tf.variables_initializer(var_list))
+
 def eval(expr, feed_dict=None):
     if feed_dict is None:
         feed_dict = {}

@@ -1,0 +1,2 @@
+model_checkpoint_path: "JacoServe.coartl_bridge"
+all_model_checkpoint_paths: "JacoServe.coartl_bridge"
