@@ -1,6 +1,7 @@
 import os
 import sys
 
+import tensorflow as tf
 import baselines.common.tf_util as tf_util
 from baselines.common import set_global_seeds
 
@@ -13,6 +14,9 @@ from coarticulation import *
 def run(config):
     sess = tf_util.single_threaded_session(gpu=False)
     sess.__enter__()
+    #init = tf.global_variables_initializer()
+    #sess.run(init)
+
     env = make_env(config.env, config)
     primitives = get_primitives(config)
 
@@ -25,8 +29,8 @@ def run(config):
 
     if(config.is_coart):
         bridge_policy = get_bridge_policy(env, primitives, config)
-        #coartl_sac = get_coartl_sac(env, primitives, bridge_policy, config)
-        #evaluate_policy(env, coartl_sac, config)
+        coartl_sac = get_coartl_sac(env, primitives, bridge_policy, config)
+        evaluate_policy(env, coartl_sac, config)
 
     env.close()
 

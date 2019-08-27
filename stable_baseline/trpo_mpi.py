@@ -7,13 +7,14 @@ from mpi4py import MPI
 import tensorflow as tf
 import numpy as np
 
-import baselines.common.tf_util as tf_util
+from stable_baselines.a2c.utils import total_episode_reward_logger
 from stable_baselines.common import explained_variance, zipsame, dataset, fmt_row, colorize, ActorCriticRLModel, \
     SetVerbosity, TensorboardWriter
-from stable_baselines import logger
-from baselines.common.mpi_adam import MpiAdam
+
+from baselines import logger
 from baselines.common.cg import cg
-from stable_baselines.a2c.utils import total_episode_reward_logger
+import baselines.common.tf_util as tf_util
+from baselines.common.mpi_adam import MpiAdam
 
 # NOTE : @dhruvramani
 from util import *

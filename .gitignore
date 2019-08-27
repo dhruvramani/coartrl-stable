@@ -4,6 +4,7 @@ log/
 __pycache__/
 *.py[cod]
 *$py.class
+dummy.py
 
 # C extensions
 *.so

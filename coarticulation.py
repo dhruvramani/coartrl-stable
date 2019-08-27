@@ -3,11 +3,11 @@ import sys
 import statistics 
 import numpy as np
 
-from stable_baselines.sac.policies import MlpPolicy
-
-from util import *
 from stable_baseline.sac import SAC
 from stable_baseline.trpo_mpi import TRPO
+from stable_baseline.sac_policy import MlpPolicy
+
+from util import *
 from primitive_policy import PrimitivePolicy
 
 from primitive import load_primitive
@@ -33,14 +33,17 @@ def get_bridge_policy(env, primitives, config):
 
 def get_coartl_sac(env, primitives, bridge_policy, config):
 	model = None
-	path = os.path.expanduser(os.path.join(config.policy_dir, config.value_path))
+	path = os.path.expanduser(os.path.join(config.policy_dir, config.sac_path))
+
 	if(os.path.exists(path)):
-		model = load_sac(path)
+		trainer = load_sac(path)
+		model = trainer.policy_tf
 	
 	if(config.is_train or model is None):
 		trainer = SAC(MlpPolicy, env, primitives=primitives, bridge_policy=bridge_policy, config=config)
 		trainer.learn(total_timesteps=config.total_timesteps)
 		model = trainer.policy_tf
+		model.save(path)
 
 	if(config.eval_all):
 		evaluate_policy(env, model, config)
@@ -48,4 +51,4 @@ def get_coartl_sac(env, primitives, bridge_policy, config):
 
 
 def load_sac(path):
-	pass
+	SAC.load(path)
