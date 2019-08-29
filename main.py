@@ -11,6 +11,8 @@ from util import make_env
 from primitive import get_primitives
 from coarticulation import *
 
+from sac.core import PrimitivePolicySAC
+
 def run(config):
     sess = tf_util.single_threaded_session(gpu=False)
     sess.__enter__()
@@ -30,7 +32,11 @@ def run(config):
     if(config.is_coart):
         bridge_policy = get_bridge_policy(env, primitives, config)
         coartl_sac = get_coartl_sac(env, primitives, bridge_policy, config)
+        primitive("Evaluating SAC for Env. ", config.env)
         evaluate_policy(env, coartl_sac, config)
+
+    coartl_sac = get_coartl_sac(make_env("JacoToss-v1"), config)
+    evaluate_policy(env, coartl_sac, config)
 
     env.close()
 
@@ -39,12 +45,14 @@ def evaluate_policy(env, policy, config):
     count = 0
     rewards = []
     while count < config.max_eval_iters:
-        action, _states, _, _ = policy.step(obs)
+        if(isinstance(policy, PrimitivePolicySAC)):
+            action, _ = policy.step(obs)
+        else:
+            action, _, _, _ = policy.step(obs)
         obs, reward, done, info = env.step(action)
 
         rewards.append(np.float(reward))
-        if(config.render):
-            env.render()
+        env.render()
         if(done == True):
             obs = env.reset()
         count += 1

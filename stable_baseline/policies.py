@@ -112,7 +112,6 @@ class BasePolicy(ABC):
                 self._obs_ph, self._processed_obs = observation_input(ob_space, n_batch, scale=scale)
             else:
                 self._obs_ph, self._processed_obs = obs_phs
-                print(type(self._obs_ph), " \n- ", type(self._processed_obs))
 
             self._action_ph = None
             if add_action_ph:

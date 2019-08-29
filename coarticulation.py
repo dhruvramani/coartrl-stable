@@ -3,9 +3,10 @@ import sys
 import statistics 
 import numpy as np
 
-from stable_baseline.sac import SAC
+from sac.sac import SAC
+from sac.core import PrimitivePolicySAC
+
 from stable_baseline.trpo_mpi import TRPO
-from stable_baseline.sac_policy import MlpPolicy
 
 from util import *
 from primitive_policy import PrimitivePolicy
@@ -31,24 +32,24 @@ def get_bridge_policy(env, primitives, config):
 		evaluate_policy(env, model, config)
 	return model
 
-def get_coartl_sac(env, primitives, bridge_policy, config):
+def get_coartl_sac(env, config, primitives=None, bridge_policy=None):
 	model = None
 	path = os.path.expanduser(os.path.join(config.policy_dir, config.sac_path))
-
 	if(os.path.exists(path)):
-		trainer = load_sac(path)
-		model = trainer.policy_tf
-	
+		model = load_sac(env, config, path) 
 	if(config.is_train or model is None):
-		trainer = SAC(MlpPolicy, env, primitives=primitives, bridge_policy=bridge_policy, config=config)
-		trainer.learn(total_timesteps=config.total_timesteps)
-		model = trainer.policy_tf
-		model.save(path)
+		print("Training SAC")
+		test_env = make_env("JacoToss-v1") #config.env)
+		model = SAC(env, test_env, path, config, primitives=primitives, bridge_policy=bridge_policy)
 
 	if(config.eval_all):
 		evaluate_policy(env, model, config)
+
 	return model
 
 
-def load_sac(path):
-	SAC.load(path)
+def load_sac(env, config, path):
+	policy = PrimitivePolicySAC('main', env, "JacoToss-v1", config)
+	policy_vars = policy.get_variables()
+	policy_path = load_model(path, policy_vars)
+	return policy

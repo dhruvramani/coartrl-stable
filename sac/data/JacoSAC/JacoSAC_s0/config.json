@@ -1,0 +1,481 @@
+{
+    "alpha":	0.2,
+    "bridge_policy":	null,
+    "config":	{
+        "Namespace(bridge_kl=0.1, bridge_path='JacoServe.coartl_bridge', cg_damping=0.1, cg_iters=10, debug=False, env='JacoServe-v1', eval_all=False, eval_primitives=False, gamma=0.99, is_coart=False, is_train=False, log_dir='./log', max_eval_iters=1000, max_kl=0.01, num_rollouts=256, policy_dir='./policies', prim_train='JacoToss-v1', primitive_activation='tanh', primitive_envs=['JacoToss-v1', 'JacoHit-v1'], primitive_fixed_var=True, primitive_hid_size=32, primitive_include_acc=False, primitive_num_hid_layers=2, primitive_paths=['JacoToss.coartl_prim', 'JacoHit.coartl_prim'], primitive_use_term=True, render=False, sac_activation='relu', sac_batch_size=100, sac_epochs=100, sac_hid_size=32, sac_lr=0.001, sac_num_hid_layers=2, sac_path='JacoServe.coartl_sac', sac_replay_size=1000000, sac_start_steps=10000, sac_steps_per_epoch=5000, seed=0, stitch_naive=False, total_timesteps=1000000, vf_iters=5, vf_stepsize=0.001)":	{
+            "bridge_kl":	0.1,
+            "bridge_path":	"JacoServe.coartl_bridge",
+            "cg_damping":	0.1,
+            "cg_iters":	10,
+            "debug":	false,
+            "env":	"JacoServe-v1",
+            "eval_all":	false,
+            "eval_primitives":	false,
+            "gamma":	0.99,
+            "is_coart":	false,
+            "is_train":	false,
+            "log_dir":	"./log",
+            "max_eval_iters":	1000,
+            "max_kl":	0.01,
+            "num_rollouts":	256,
+            "policy_dir":	"./policies",
+            "prim_train":	"JacoToss-v1",
+            "primitive_activation":	"tanh",
+            "primitive_envs":	[
+                "JacoToss-v1",
+                "JacoHit-v1"
+            ],
+            "primitive_fixed_var":	true,
+            "primitive_hid_size":	32,
+            "primitive_include_acc":	false,
+            "primitive_num_hid_layers":	2,
+            "primitive_paths":	[
+                "JacoToss.coartl_prim",
+                "JacoHit.coartl_prim"
+            ],
+            "primitive_use_term":	true,
+            "render":	false,
+            "sac_activation":	"relu",
+            "sac_batch_size":	100,
+            "sac_epochs":	100,
+            "sac_hid_size":	32,
+            "sac_lr":	0.001,
+            "sac_num_hid_layers":	2,
+            "sac_path":	"JacoServe.coartl_sac",
+            "sac_replay_size":	1000000,
+            "sac_start_steps":	10000,
+            "sac_steps_per_epoch":	5000,
+            "seed":	0,
+            "stitch_naive":	false,
+            "total_timesteps":	1000000,
+            "vf_iters":	5,
+            "vf_stepsize":	0.001
+        }
+    },
+    "env":	{
+        "<TransitionEnvWrapper<TimeLimit<JacoTossEnv<JacoToss-v1>>>>":	{
+            "_ob_space":	"39",
+            "action_space":	{
+                "Box(9,)":	{
+                    "dtype":	"float32",
+                    "high":	"[1. 1. 1. 1. 1. 1. 1. 1. 1.]",
+                    "low":	"[-1. -1. -1. -1. -1. -1. -1. -1. -1.]",
+                    "shape":	[
+                        9
+                    ]
+                }
+            },
+            "env":	{
+                "<TimeLimit<JacoTossEnv<JacoToss-v1>>>":	{
+                    "_elapsed_steps":	0,
+                    "_episode_started_at":	null,
+                    "_max_episode_seconds":	null,
+                    "_max_episode_steps":	200,
+                    "action_space":	{
+                        "Box(9,)":	{
+                            "dtype":	"float32",
+                            "high":	"[1. 1. 1. 1. 1. 1. 1. 1. 1.]",
+                            "low":	"[-1. -1. -1. -1. -1. -1. -1. -1. -1.]",
+                            "shape":	[
+                                9
+                            ]
+                        }
+                    },
+                    "env":	{
+                        "<JacoTossEnv<JacoToss-v1>>":	{
+                            "_above":	false,
+                            "_boxtop":	[
+                                0,
+                                0,
+                                0
+                            ],
+                            "_config":	{
+                                "box_size":	0.04,
+                                "ctrl_reward":	0.0001,
+                                "guide_reward":	100,
+                                "init_random_rot":	0,
+                                "init_randomness":	0.005,
+                                "max_height":	2.0,
+                                "pick_reward":	200,
+                                "pos_stable_reward":	2,
+                                "random_box":	0.04,
+                                "random_steps":	0,
+                                "release_height":	0.7,
+                                "release_reward":	50,
+                                "success_reward":	100,
+                                "up_reward":	50
+                            },
+                            "_dist_boxtop":	0.5396303436319005,
+                            "_ezpickle_args":	[],
+                            "_ezpickle_kwargs":	{},
+                            "_fail":	false,
+                            "_falling":	false,
+                            "_max_height":	0,
+                            "_pick_height":	0,
+                            "_picked":	false,
+                            "_released":	false,
+                            "_with_rot":	0,
+                            "action_space":	{
+                                "Box(9,)":	{
+                                    "dtype":	"float32",
+                                    "high":	"[1. 1. 1. 1. 1. 1. 1. 1. 1.]",
+                                    "low":	"[-1. -1. -1. -1. -1. -1. -1. -1. -1.]",
+                                    "shape":	[
+                                        9
+                                    ]
+                                }
+                            },
+                            "data":	"<mujoco_py.cymj.PyMjData object at 0x6d49c28>",
+                            "frame_skip":	4,
+                            "init_qpos":	"[0.   0.   0.   0.   0.   0.   0.   0.   0.   0.4  0.3  0.04 1.   0.\n 0.   0.  ]",
+                            "init_qvel":	"[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]",
+                            "metadata":	{
+                                "render.modes":	[
+                                    "human",
+                                    "rgb_array"
+                                ],
+                                "video.frames_per_second":	125
+                            },
+                            "model":	"<mujoco_py.cymj.PyMjModel object at 0x5e98d58>",
+                            "np_random":	"<mtrand.RandomState object at 0x7fdf0de5e240>",
+                            "ob_shape":	{
+                                "acc":	[
+                                    12
+                                ],
+                                "hand":	[
+                                    3
+                                ],
+                                "joint":	[
+                                    24
+                                ]
+                            },
+                            "ob_type":	"dict_keys(['hand', 'joint', 'acc'])",
+                            "obs_dim":	39,
+                            "observation_space":	{
+                                "Box(39,)":	{
+                                    "dtype":	"float32",
+                                    "high":	"[inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf]",
+                                    "low":	"[-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf]",
+                                    "shape":	[
+                                        39
+                                    ]
+                                }
+                            },
+                            "reward_type":	[
+                                "ctrl_reward",
+                                "guide_reward",
+                                "pick_reward",
+                                "release_reward",
+                                "up_reward",
+                                "pos_stable_reward",
+                                "success_reward",
+                                "success"
+                            ],
+                            "sim":	"<mujoco_py.cymj.MjSim object at 0x7fdf0d5c0158>",
+                            "spec":	{
+                                "EnvSpec(JacoToss-v1)":	{
+                                    "_entry_point":	"gym.envs.mujoco:JacoTossEnv",
+                                    "_env_name":	"JacoToss",
+                                    "_kwargs":	{
+                                        "with_rot":	0
+                                    },
+                                    "_local_only":	false,
+                                    "id":	"JacoToss-v1",
+                                    "max_episode_seconds":	null,
+                                    "max_episode_steps":	200,
+                                    "nondeterministic":	false,
+                                    "reward_threshold":	null,
+                                    "tags":	{
+                                        "wrapper_config.TimeLimit.max_episode_steps":	200
+                                    },
+                                    "trials":	100
+                                }
+                            },
+                            "viewer":	null
+                        }
+                    },
+                    "metadata":	{
+                        "render.modes":	[
+                            "human",
+                            "rgb_array"
+                        ],
+                        "video.frames_per_second":	125
+                    },
+                    "observation_space":	{
+                        "Box(39,)":	{
+                            "dtype":	"float32",
+                            "high":	"[inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf]",
+                            "low":	"[-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf]",
+                            "shape":	[
+                                39
+                            ]
+                        }
+                    },
+                    "reward_range":	[
+                        -Infinity,
+                        Infinity
+                    ]
+                }
+            },
+            "hard_coded":	false,
+            "metadata":	{
+                "render.modes":	[
+                    "human",
+                    "rgb_array"
+                ],
+                "video.frames_per_second":	125
+            },
+            "ob_shape":	{
+                "acc":	[
+                    12
+                ],
+                "hand":	[
+                    3
+                ],
+                "joint":	[
+                    24
+                ]
+            },
+            "ob_type":	"dict_keys(['hand', 'joint', 'acc'])",
+            "observation_space":	{
+                "Box(39,)":	{
+                    "dtype":	"float32",
+                    "high":	"[inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf]",
+                    "low":	"[-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf]",
+                    "shape":	[
+                        39
+                    ]
+                }
+            },
+            "reward_range":	[
+                -Infinity,
+                Infinity
+            ]
+        }
+    },
+    "exp_name":	"JacoSAC",
+    "logger":	{
+        "<sac.utils.logx.EpochLogger object at 0x7fdf0de6a748>":	{
+            "epoch_dict":	{},
+            "exp_name":	"JacoSAC",
+            "first_row":	true,
+            "log_current_row":	{},
+            "log_headers":	[],
+            "output_dir":	"/home/nevronas/Projects/Personal-Projects/Dhruv/coartrl-stable/sac/data/JacoSAC/JacoSAC_s0",
+            "output_file":	{
+                "<_io.TextIOWrapper name='/home/nevronas/Projects/Personal-Projects/Dhruv/coartrl-stable/sac/data/JacoSAC/JacoSAC_s0/progress.txt' mode='w' encoding='UTF-8'>":	{
+                    "mode":	"w"
+                }
+            }
+        }
+    },
+    "logger_kwargs":	{
+        "exp_name":	"JacoSAC",
+        "output_dir":	"/home/nevronas/Projects/Personal-Projects/Dhruv/coartrl-stable/sac/data/JacoSAC/JacoSAC_s0"
+    },
+    "path":	"./policies/JacoServe.coartl_sac",
+    "polyak":	0.995,
+    "primitives":	null,
+    "save_freq":	1,
+    "test_env":	{
+        "<TransitionEnvWrapper<TimeLimit<JacoTossEnv<JacoToss-v1>>>>":	{
+            "_ob_space":	"39",
+            "action_space":	{
+                "Box(9,)":	{
+                    "dtype":	"float32",
+                    "high":	"[1. 1. 1. 1. 1. 1. 1. 1. 1.]",
+                    "low":	"[-1. -1. -1. -1. -1. -1. -1. -1. -1.]",
+                    "shape":	[
+                        9
+                    ]
+                }
+            },
+            "env":	{
+                "<TimeLimit<JacoTossEnv<JacoToss-v1>>>":	{
+                    "_elapsed_steps":	0,
+                    "_episode_started_at":	null,
+                    "_max_episode_seconds":	null,
+                    "_max_episode_steps":	200,
+                    "action_space":	{
+                        "Box(9,)":	{
+                            "dtype":	"float32",
+                            "high":	"[1. 1. 1. 1. 1. 1. 1. 1. 1.]",
+                            "low":	"[-1. -1. -1. -1. -1. -1. -1. -1. -1.]",
+                            "shape":	[
+                                9
+                            ]
+                        }
+                    },
+                    "env":	{
+                        "<JacoTossEnv<JacoToss-v1>>":	{
+                            "_above":	false,
+                            "_boxtop":	[
+                                0,
+                                0,
+                                0
+                            ],
+                            "_config":	{
+                                "box_size":	0.04,
+                                "ctrl_reward":	0.0001,
+                                "guide_reward":	100,
+                                "init_random_rot":	0,
+                                "init_randomness":	0.005,
+                                "max_height":	2.0,
+                                "pick_reward":	200,
+                                "pos_stable_reward":	2,
+                                "random_box":	0.04,
+                                "random_steps":	0,
+                                "release_height":	0.7,
+                                "release_reward":	50,
+                                "success_reward":	100,
+                                "up_reward":	50
+                            },
+                            "_dist_boxtop":	0.5396303436319005,
+                            "_ezpickle_args":	[],
+                            "_ezpickle_kwargs":	{},
+                            "_fail":	false,
+                            "_falling":	false,
+                            "_max_height":	0,
+                            "_pick_height":	0,
+                            "_picked":	false,
+                            "_released":	false,
+                            "_with_rot":	0,
+                            "action_space":	{
+                                "Box(9,)":	{
+                                    "dtype":	"float32",
+                                    "high":	"[1. 1. 1. 1. 1. 1. 1. 1. 1.]",
+                                    "low":	"[-1. -1. -1. -1. -1. -1. -1. -1. -1.]",
+                                    "shape":	[
+                                        9
+                                    ]
+                                }
+                            },
+                            "data":	"<mujoco_py.cymj.PyMjData object at 0x95bafd8>",
+                            "frame_skip":	4,
+                            "init_qpos":	"[0.   0.   0.   0.   0.   0.   0.   0.   0.   0.4  0.3  0.04 1.   0.\n 0.   0.  ]",
+                            "init_qvel":	"[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]",
+                            "metadata":	{
+                                "render.modes":	[
+                                    "human",
+                                    "rgb_array"
+                                ],
+                                "video.frames_per_second":	125
+                            },
+                            "model":	"<mujoco_py.cymj.PyMjModel object at 0x9662d28>",
+                            "np_random":	"<mtrand.RandomState object at 0x7fdf0c04a168>",
+                            "ob_shape":	{
+                                "acc":	[
+                                    12
+                                ],
+                                "hand":	[
+                                    3
+                                ],
+                                "joint":	[
+                                    24
+                                ]
+                            },
+                            "ob_type":	"dict_keys(['hand', 'joint', 'acc'])",
+                            "obs_dim":	39,
+                            "observation_space":	{
+                                "Box(39,)":	{
+                                    "dtype":	"float32",
+                                    "high":	"[inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf]",
+                                    "low":	"[-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf]",
+                                    "shape":	[
+                                        39
+                                    ]
+                                }
+                            },
+                            "reward_type":	[
+                                "ctrl_reward",
+                                "guide_reward",
+                                "pick_reward",
+                                "release_reward",
+                                "up_reward",
+                                "pos_stable_reward",
+                                "success_reward",
+                                "success"
+                            ],
+                            "sim":	"<mujoco_py.cymj.MjSim object at 0x7fdf0bffa158>",
+                            "spec":	{
+                                "EnvSpec(JacoToss-v1)":	{
+                                    "_entry_point":	"gym.envs.mujoco:JacoTossEnv",
+                                    "_env_name":	"JacoToss",
+                                    "_kwargs":	{
+                                        "with_rot":	0
+                                    },
+                                    "_local_only":	false,
+                                    "id":	"JacoToss-v1",
+                                    "max_episode_seconds":	null,
+                                    "max_episode_steps":	200,
+                                    "nondeterministic":	false,
+                                    "reward_threshold":	null,
+                                    "tags":	{
+                                        "wrapper_config.TimeLimit.max_episode_steps":	200
+                                    },
+                                    "trials":	100
+                                }
+                            },
+                            "viewer":	null
+                        }
+                    },
+                    "metadata":	{
+                        "render.modes":	[
+                            "human",
+                            "rgb_array"
+                        ],
+                        "video.frames_per_second":	125
+                    },
+                    "observation_space":	{
+                        "Box(39,)":	{
+                            "dtype":	"float32",
+                            "high":	"[inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf]",
+                            "low":	"[-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf]",
+                            "shape":	[
+                                39
+                            ]
+                        }
+                    },
+                    "reward_range":	[
+                        -Infinity,
+                        Infinity
+                    ]
+                }
+            },
+            "hard_coded":	false,
+            "metadata":	{
+                "render.modes":	[
+                    "human",
+                    "rgb_array"
+                ],
+                "video.frames_per_second":	125
+            },
+            "ob_shape":	{
+                "acc":	[
+                    12
+                ],
+                "hand":	[
+                    3
+                ],
+                "joint":	[
+                    24
+                ]
+            },
+            "ob_type":	"dict_keys(['hand', 'joint', 'acc'])",
+            "observation_space":	{
+                "Box(39,)":	{
+                    "dtype":	"float32",
+                    "high":	"[inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf inf\n inf inf inf]",
+                    "low":	"[-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf\n -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf]",
+                    "shape":	[
+                        39
+                    ]
+                }
+            },
+            "reward_range":	[
+                -Infinity,
+                Infinity
+            ]
+        }
+    }
+}
