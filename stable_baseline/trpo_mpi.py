@@ -122,13 +122,8 @@ class TRPO(ActorCriticRLModel):
             self.nworkers = MPI.COMM_WORLD.Get_size()
             self.rank = MPI.COMM_WORLD.Get_rank()
             np.set_printoptions(precision=3)
-
-            #self.graph = tf.Graph()
-            #with self.graph.as_default():
+            
             self.sess = tf_util.get_session()
-            #init = tf.global_variables_initializer()
-            #self.sess.run(init)
-            #self.sess.__enter__()
 
             if self.using_gail:
                 self.reward_giver = TransitionClassifier(self.observation_space, self.action_space,

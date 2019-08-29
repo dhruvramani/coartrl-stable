@@ -16,8 +16,6 @@ from sac.core import PrimitivePolicySAC
 def run(config):
     sess = tf_util.single_threaded_session(gpu=False)
     sess.__enter__()
-    #init = tf.global_variables_initializer()
-    #sess.run(init)
 
     env = make_env(config.env, config)
     primitives = get_primitives(config)

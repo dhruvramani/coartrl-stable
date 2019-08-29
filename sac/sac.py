@@ -115,8 +115,6 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                               for v_main, v_targ in zip(main_policy.get_variables(), target_policy.get_variables())])
                               
     sess = tf_util.get_session()
-    #sess.run(tf.global_variables_initializer())
-    #tf_util.initialize()
     var_list = main_policy.get_variables() + target_policy.get_variables() 
     load_model(path, var_list)
     tf_util.initialize_vars(value_optimizer.variables())
