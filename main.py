@@ -28,7 +28,9 @@ def run(config):
             prim_env.close()
 
     if(config.is_coart):
-        bridge_policy = get_bridge_policy(env, primitives, config)
+        bridge_policy = None
+        if(config.train_bridge):
+            bridge_policy = get_bridge_policy(env, primitives, config)
         coartl_sac = get_coartl_sac(env, config, primitives, bridge_policy)
         print("Evaluating SAC for Env. ", config.env)
         evaluate_policy(env, coartl_sac, config)

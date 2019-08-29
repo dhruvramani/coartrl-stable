@@ -35,11 +35,11 @@ def argparser():
 
     # --- Coarticulation ---
     parser.add_argument('--is_coart', type=str2bool, default=True)
+    parser.add_argument('--train_bridge', type=str2bool, default=True)
     parser.add_argument('--bridge_path', type=str, default="JacoServe.coartl_bridge")
     parser.add_argument('--sac_path', type=str, default="JacoServe.coartl_sac")
     parser.add_argument('--is_train', type=str2bool, default=False)
     parser.add_argument('--eval_all', type=str2bool, default=False)
-
     parser.add_argument('--bridge_kl', type=float, default=0.1)
     parser.add_argument('--stitch_naive', type=str2bool, default=True)
 
@@ -70,7 +70,7 @@ def argparser():
     parser.add_argument('--num_rollouts', type=int, default=int(256))
     parser.add_argument('--total_timesteps', type=int, default=int(1e6))
     parser.add_argument('--max_eval_iters', type=int, default=int(1e3))
-    parser.add_argument('--render', type=str2bool, default=True, help='Render frames')
+    parser.add_argument('--render', type=str2bool, default=False, help='Render frames')
     parser.add_argument('--policy_dir', type=str, default='./policies')
     parser.add_argument('--log_dir', type=str, default='./log')
     parser.add_argument('--debug', type=str2bool, default=False, help='See debugging info')
