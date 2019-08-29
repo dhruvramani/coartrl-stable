@@ -48,9 +48,9 @@ Soft Actor-Critic
 def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
         polyak=0.995, alpha=0.2, save_freq=1):
     
-    logger_kwargs = setup_logger_kwargs("JacoSAC", 0)
+    logger_kwargs = dict()
     logger = EpochLogger(**logger_kwargs)
-    logger.save_config(locals())
+    #logger.save_config(locals())
 
     tf.set_random_seed(config.seed)
     np.random.seed(config.seed)
@@ -116,10 +116,12 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                               
     sess = tf_util.get_session()
     #sess.run(tf.global_variables_initializer())
-    tf_util.initialize()
-    var_list = main_policy.get_variables() + target_policy.get_variables()
+    #tf_util.initialize()
+    var_list = main_policy.get_variables() + target_policy.get_variables() 
     load_model(path, var_list)
-    #tf_util.initialize_vars(var_list)
+    tf_util.initialize_vars(value_optimizer.variables())
+    tf_util.initialize_vars(pi_optimizer.variables())
+
     #sess.run(target_init)
 
     # Setup model saving
@@ -141,21 +143,40 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
     total_steps, t = config.sac_steps_per_epoch * config.sac_epochs, 0
 
-    # Main loop: collect experience in env and update/log each epoch
+    # NOTE : @dhruvramani
+    num_primitives = len(primitives)
+    curr_prim = 0
+    if(config.stitch_naive):
+        stitch_pi = primitives[curr_prim]
+    else :
+        stitch_pi = bridge_policy
+
     while t in range(total_steps):
 
         """
         Until config.sac_start_steps have elapsed, randomly sample actions
         from a uniform distribution for better exploration. Afterwards,
         use the learned policy.
-        """
+
         if t > config.sac_start_steps:
             a = main_policy.step(o)
         else:
             a = env.action_space.sample()
-        # Step the env
-        # print('Action:',a)
-        # print('#'*50)
+        
+        """
+        # Stitching SAC
+        if(config.is_coart):
+            a, _, _, _ = stitch_pi.step(o)
+        else :
+            if t > config.sac_start_steps:
+                a = main_policy.step(o)
+            else:
+                a = env.action_space.sample()
+
+        if(config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)):
+            curr_prim = 1
+            stitch_pi = primitives[curr_prim]
+
         if config.render:
             env.render()
         
@@ -163,24 +184,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
         ep_ret += r
         ep_len += 1
 
-        # Ignore the "done" signal if it comes from hitting the time
-        # horizon (that is, when it's an artificial terminal signal
-        # that isn't based on the agent's state)
         d = False if ep_len == config.num_rollouts else d
-
-        # Store experience to replay buffer
         replay_buffer.store(o, a, r, o2, d)
-
-        # Super critical, easy to overlook step: make sure to update 
-        # most recent observation!
         o = o2
 
         if d or (ep_len == config.num_rollouts):
-            """
-            Perform all SAC updates at the end of the trajectory.
-            This is a slight difference from the SAC specified in the
-            original paper.
-            """
             for j in range(ep_len):
                 batch = replay_buffer.sample_batch(config.sac_batch_size)
                 feed_dict = {a_ph: batch['acts'],
@@ -204,6 +212,12 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
 
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
+
+            curr_prim = 0
+            if(config.stitch_naive):
+                stitch_pi = primitives[curr_prim]
+            else :
+                stitch_pi = bridge_policy
 
         # End of epoch wrap-up
         if t > 0 and t % config.sac_steps_per_epoch == 0:
@@ -233,5 +247,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             logger.log_tabular('LossV', average_only=True)
             logger.log_tabular('Time', time.time()-start_time)
             logger.dump_tabular()
+
+            curr_prim = 0
+            if(config.stitch_naive):
+                stitch_pi = primitives[curr_prim]
+            else :
+                stitch_pi = bridge_policy
 
     return main_policy

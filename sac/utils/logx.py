@@ -105,6 +105,7 @@ class Logger:
         else:
             self.output_dir = None
             self.output_file = None
+
         self.first_row=True
         self.log_headers = []
         self.log_current_row = {}
@@ -248,9 +249,9 @@ class Logger:
             print("-"*n_slashes)
             if self.output_file is not None:
                 if self.first_row:
-                    self.output_file.write("\t".join(self.log_headers)+"\n")
-                self.output_file.write("\t".join(map(str,vals))+"\n")
-                self.output_file.flush()
+                    print("\t".join(self.log_headers)+"\n")
+                print("\t".join(map(str,vals))+"\n")
+                #self.output_file.flush()
         self.log_current_row.clear()
         self.first_row=False
 

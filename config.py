@@ -41,7 +41,7 @@ def argparser():
     parser.add_argument('--eval_all', type=str2bool, default=False)
 
     parser.add_argument('--bridge_kl', type=float, default=0.1)
-    parser.add_argument('--stitch_naive', type=str2bool, default=False)
+    parser.add_argument('--stitch_naive', type=str2bool, default=True)
 
     # --- TRPO ---
     parser.add_argument('--max_kl', type=float, default=0.01)
@@ -62,7 +62,7 @@ def argparser():
     parser.add_argument('--sac_batch_size', type=int, default=100)
     #parser.add_argument('--sac_max_ep_len', type=int, default=1000)
     parser.add_argument('--sac_replay_size', type=int, default=int(1e6))
-    parser.add_argument('--sac_lr', type=float, default=1e-3)
+    parser.add_argument('--sac_lr', type=float, default=1e-2)
     parser.add_argument('--sac_start_steps', type=int, default=10000, 
         help="Number of steps for uniform-random action selection, before running real policy. Helps exploration.")
 
@@ -70,7 +70,7 @@ def argparser():
     parser.add_argument('--num_rollouts', type=int, default=int(256))
     parser.add_argument('--total_timesteps', type=int, default=int(1e6))
     parser.add_argument('--max_eval_iters', type=int, default=int(1e3))
-    parser.add_argument('--render', type=str2bool, default=False, help='Render frames')
+    parser.add_argument('--render', type=str2bool, default=True, help='Render frames')
     parser.add_argument('--policy_dir', type=str, default='./policies')
     parser.add_argument('--log_dir', type=str, default='./log')
     parser.add_argument('--debug', type=str2bool, default=False, help='See debugging info')

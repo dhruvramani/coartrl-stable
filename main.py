@@ -31,12 +31,9 @@ def run(config):
 
     if(config.is_coart):
         bridge_policy = get_bridge_policy(env, primitives, config)
-        coartl_sac = get_coartl_sac(env, primitives, bridge_policy, config)
-        primitive("Evaluating SAC for Env. ", config.env)
+        coartl_sac = get_coartl_sac(env, config, primitives, bridge_policy)
+        print("Evaluating SAC for Env. ", config.env)
         evaluate_policy(env, coartl_sac, config)
-
-    coartl_sac = get_coartl_sac(make_env("JacoToss-v1"), config)
-    evaluate_policy(env, coartl_sac, config)
 
     env.close()
 

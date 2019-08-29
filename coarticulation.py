@@ -37,9 +37,10 @@ def get_coartl_sac(env, config, primitives=None, bridge_policy=None):
 	path = os.path.expanduser(os.path.join(config.policy_dir, config.sac_path))
 	if(os.path.exists(path)):
 		model = load_sac(env, config, path) 
+	
 	if(config.is_train or model is None):
 		print("Training SAC")
-		test_env = make_env("JacoToss-v1") #config.env)
+		test_env = make_env(config.env)
 		model = SAC(env, test_env, path, config, primitives=primitives, bridge_policy=bridge_policy)
 
 	if(config.eval_all):
