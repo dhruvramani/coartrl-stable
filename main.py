@@ -13,6 +13,9 @@ from coarticulation import *
 
 from sac.core import PrimitivePolicySAC
 
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
 def run(config):
     sess = tf_util.single_threaded_session(gpu=False)
     sess.__enter__()
@@ -22,7 +25,9 @@ def run(config):
 
     if(config.eval_primitives):
         for i, p_policy in enumerate(primitives):
+            print("*"*50)
             print("Evaluating Primitive for Env. ", config.primitive_envs[i])
+            print("*"*50)
             prim_env = make_env(config.primitive_envs[i], config)
             evaluate_policy(prim_env, p_policy, config)
             prim_env.close()
@@ -32,7 +37,9 @@ def run(config):
         if(config.train_bridge):
             bridge_policy = get_bridge_policy(env, primitives, config)
         coartl_sac = get_coartl_sac(env, config, primitives, bridge_policy)
-        print("Evaluating SAC for Env. ", config.env)
+        print("*"*50)
+        print("Evaluating SAC for Env: ", config.env)
+        print("*"*50)
         evaluate_policy(env, coartl_sac, config)
 
     env.close()
