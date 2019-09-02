@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 import gym
@@ -116,10 +117,9 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                               
     sess = tf_util.get_session()
     var_list = main_policy.get_variables() + target_policy.get_variables() 
-    load_model(path, var_list)
+    ckpt_path = load_model(path, var_list)
     tf_util.initialize_vars(value_optimizer.variables())
     tf_util.initialize_vars(pi_optimizer.variables())
-
     #sess.run(target_init)
 
     # Setup model saving
@@ -216,6 +216,8 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                 stitch_pi = primitives[curr_prim]
             else :
                 stitch_pi = bridge_policy
+
+            tf_util.save_state(ckpt_path, var_list)
 
         # End of epoch wrap-up
         if t > 0 and t % config.sac_steps_per_epoch == 0:

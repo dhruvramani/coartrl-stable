@@ -45,3 +45,8 @@ def load_model(load_model_path, var_list=None):
     if ckpt_path:
         tf_util.load_state(ckpt_path, var_list)
     return ckpt_path
+
+def printstar(string, num_stars=50):
+    print("*" * num_stars)
+    print(string)
+    print("*" * num_stars)

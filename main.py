@@ -6,7 +6,7 @@ import baselines.common.tf_util as tf_util
 from baselines.common import set_global_seeds
 
 from config import argparser
-from util import make_env
+from util import make_env, printstar
 
 from primitive import get_primitives
 from coarticulation import *
@@ -25,9 +25,7 @@ def run(config):
 
     if(config.eval_primitives):
         for i, p_policy in enumerate(primitives):
-            print("*"*50)
-            print("Evaluating Primitive for Env. ", config.primitive_envs[i])
-            print("*"*50)
+            printstar("Evaluating Primitive for Env. {}".format(config.primitive_envs[i]))
             prim_env = make_env(config.primitive_envs[i], config)
             evaluate_policy(prim_env, p_policy, config)
             prim_env.close()
@@ -37,9 +35,7 @@ def run(config):
         if(config.train_bridge):
             bridge_policy = get_bridge_policy(env, primitives, config)
         coartl_sac = get_coartl_sac(env, config, primitives, bridge_policy)
-        print("*"*50)
-        print("Evaluating SAC for Env: ", config.env)
-        print("*"*50)
+        printstar("Evaluating SAC for Env: {}".format(config.env))
         evaluate_policy(env, coartl_sac, config)
 
     env.close()

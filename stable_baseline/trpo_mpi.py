@@ -143,8 +143,8 @@ class TRPO(ActorCriticRLModel):
             with tf.variable_scope("oldpi", reuse=False):
                 old_policy = self.policy(env=self.env, name="%s/oldpi" % self.env_name, ob_env_name=ob_env_name, config=self.config, n_env=self.n_envs)
 
-            policy_vars = self.policy_pi.get_variables() + old_policy.get_variables()
-            policy_path = load_model(self.save_path, policy_vars)
+            self.policy_vars = self.policy_pi.get_variables() + old_policy.get_variables()
+            self.policy_path = load_model(self.save_path, policy_vars)
 
             with tf.variable_scope("loss", reuse=False):
                 atarg = tf.placeholder(dtype=tf.float32, shape=[None])  # Target advantage function (if applicable)
@@ -444,6 +444,8 @@ class TRPO(ActorCriticRLModel):
 
                     logger.record_tabular("explained_variance_tdlam_before",
                                           explained_variance(vpredbefore, tdlamret))
+
+                    tf_util.save_state(self.policy_path, self.policy_vars)
 
                     if self.using_gail:
                         # ------------------ Update D ------------------
