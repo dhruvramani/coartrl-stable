@@ -52,7 +52,8 @@ def evaluate_policy(env, policy, config):
         obs, reward, done, info = env.step(action)
 
         rewards.append(np.float(reward))
-        env.render()
+        if config.render:
+            env.render()
         if(done == True):
             obs = env.reset()
         count += 1
