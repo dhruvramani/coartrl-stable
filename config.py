@@ -35,13 +35,13 @@ def argparser():
 
     # --- Coarticulation ---
     parser.add_argument('--is_coart', type=str2bool, default=True)
-    parser.add_argument('--train_bridge', type=str2bool, default=False)
+    parser.add_argument('--train_bridge', type=str2bool, default=True)
     parser.add_argument('--bridge_path', type=str, default="JacoServe.coartl_bridge")
     parser.add_argument('--sac_path', type=str, default="JacoServe.coartl_sac")
     parser.add_argument('--is_train', type=str2bool, default=False)
     parser.add_argument('--eval_all', type=str2bool, default=False)
     parser.add_argument('--bridge_kl', type=float, default=0.1)
-    parser.add_argument('--stitch_naive', type=str2bool, default=True)
+    parser.add_argument('--stitch_naive', type=str2bool, default=False)
 
     # --- TRPO ---
     parser.add_argument('--max_kl', type=float, default=0.01)

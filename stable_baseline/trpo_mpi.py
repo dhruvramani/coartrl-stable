@@ -144,7 +144,7 @@ class TRPO(ActorCriticRLModel):
                 old_policy = self.policy(env=self.env, name="%s/oldpi" % self.env_name, ob_env_name=ob_env_name, config=self.config, n_env=self.n_envs)
 
             self.policy_vars = self.policy_pi.get_variables() + old_policy.get_variables()
-            self.policy_path = load_model(self.save_path, policy_vars)
+            self.policy_path = load_model(self.save_path, self.policy_vars)
 
             with tf.variable_scope("loss", reuse=False):
                 atarg = tf.placeholder(dtype=tf.float32, shape=[None])  # Target advantage function (if applicable)
