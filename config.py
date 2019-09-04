@@ -24,6 +24,8 @@ def argparser():
     parser.add_argument('--prim_train', type=str, default='JacoToss-v1', 
         help="Specifies which primitive to train on the current run")
     parser.add_argument('--eval_primitives', type=str2bool, default=False)
+    parser.add_argument('--train_primitives', type=str2bool, default=False,
+                        help='override the saved primitives and train again')
 
     parser.add_argument('--primitive_num_hid_layers', type=int, default=2)
     parser.add_argument('--primitive_hid_size', type=int, default=32)

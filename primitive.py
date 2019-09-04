@@ -31,9 +31,10 @@ def get_primitives(config):
         env = make_env(config.primitive_envs[i], config)
         model = None
 
-        if(os.path.exists(path)):
+        if(os.path.exists(path) and not config.train_primitives):
             model = load_primitive(env, config, path, env_name)
-        elif(env_name == config.prim_train):
+        # elif(env_name == config.prim_train):
+        elif(config.train_primitives):
             model = learn_primitive(env, config, path, env_name)
         
         if(model is not None):

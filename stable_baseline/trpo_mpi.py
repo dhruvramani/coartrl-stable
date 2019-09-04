@@ -154,7 +154,9 @@ class TRPO(ActorCriticRLModel):
                 action = self.policy_pi.pdtype.sample_placeholder([None])
 
                 # NOTE : @dhruvramani
-                primitive_kl = tf.reduce_mean(self.primitives[1].pd.kl(self.policy_pi.pd))
+                if(self.primitives is not None):
+                # NOTE : @nsidn98 for primitive training
+                    primitive_kl = tf.reduce_mean(self.primitives[1].pd.kl(self.policy_pi.pd))
 
                 kloldnew = old_policy.proba_distribution.kl(self.policy_pi.proba_distribution)
                 ent = self.policy_pi.proba_distribution.entropy()
