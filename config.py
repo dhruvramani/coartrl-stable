@@ -67,6 +67,8 @@ def argparser():
     parser.add_argument('--sac_lr', type=float, default=1e-3)
     parser.add_argument('--sac_start_steps', type=int, default=10000, 
         help="Number of steps for uniform-random action selection, before running real policy. Helps exploration.")
+    parser.add_argument('--imitate',type=str2bool,default=False,
+        help="To imitate primitive-1 with SAC")
 
     # --- Misc ---
     parser.add_argument('--num_rollouts', type=int, default=int(256))
