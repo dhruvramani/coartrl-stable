@@ -105,7 +105,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     if config.imitate:
         imitate_loss = 0.5 * tf.reduce_mean((a_ph - pi) ** 2)
         imitate_optimizer = tf.train.AdamOptimizer(learning_rate=config.sac_lr)
-        imitate_op = imitate_optimizer.minimize(imitate_loss, var_list = main_policy.get_vars('main/pi'))
+        train_imitate_op = imitate_optimizer.minimize(imitate_loss, var_list = main_policy.get_vars('main/pi'))
 
     # Polyak averaging for target variables
     # (control flow because sess.run otherwise evaluates in nondeterministic order)
@@ -120,7 +120,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     # NOTE : @dhruvramani
     if config.imitate:
         imitate_ops = [pi_loss, q1_loss, q2_loss, v_loss, q1, q2, v, logp_pi,
-                        imitate_op]
+                        train_imitate_op]
 
     # Initializing targets to match main variables
     target_init = tf.group([tf.assign(v_targ, v_main)
@@ -131,6 +131,9 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     ckpt_path = load_model(path, var_list)
     tf_util.initialize_vars(value_optimizer.variables())
     tf_util.initialize_vars(pi_optimizer.variables())
+
+    if config.imitate:
+        tf_util.initialize_vars(imitate_optimizer.variables())
     #sess.run(target_init)
 
     # Setup model saving
