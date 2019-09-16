@@ -188,7 +188,6 @@ class PrimitivePolicySAC(object):
         hid_size = self._hid_size
         num_hid_layers = self._num_hid_layers
 
-        # primitive policy
         self.pdtype = pdtype = make_pdtype(ac_space)
         # NOTE : @dhruvramani - modifying code
         with tf.variable_scope("pi"):
@@ -213,13 +212,6 @@ class PrimitivePolicySAC(object):
             pi *= action_scale
 
             self.mu, self.pi, self.logp_pi = mu, pi, logp_pi
-            
-            # if gaussian_fixed_var and isinstance(ac_space, gym.spaces.Box):
-            #     mean = tf.layers.dense(last_out, pdtype.param_shape()[0]//2, name="final", kernel_initializer=U.normc_initializer(0.01))
-            #     logstd = tf.get_variable(name="logstd", shape=[1, pdtype.param_shape()[0]//2], initializer=tf.zeros_initializer())
-            #     pdparam = tf.concat([mean, mean * 0.0 + logstd], axis=1)
-            # else:
-            #     pdparam = tf.layers.dense(last_out, pdtype.param_shape()[0], name="final", kernel_initializer=U.normc_initializer(0.01))
 
         # value function
         def value_mvp(scope_name, input, reuse=False):
@@ -238,12 +230,6 @@ class PrimitivePolicySAC(object):
         v = value_mvp("v", self.obz)
 
         self.q1, self.q1_pi, self.q2, self.q2_pi, self.v = q1, q1_pi, q2, q2_pi, v
-
-
-        #self.pd = pdtype.proba_distribution_from_flat(pdparam)
-        # sample action
-        #stochastic = tf.placeholder(dtype=tf.bool, shape=())
-        #ac = U.switch(stochastic, self.pd.sample(), self.pd.mode())
 
         self._act = U.function(self.obs, [self.mu, self.pi, self.v])
         self._value = U.function(self.obs, [self.q1, self.q1_pi, self.q2, self.q2_pi, self.v])

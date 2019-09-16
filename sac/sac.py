@@ -101,6 +101,12 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     with tf.control_dependencies([train_pi_op]):
         train_value_op = value_optimizer.minimize(value_loss, var_list=value_params)
 
+    # NOTE : @dhruvramani
+    if config.imitate:
+        imitate_loss = 0.5 * tf.reduce_mean((a_ph - pi) ** 2)
+        imitate_optimizer = tf.train.AdamOptimizer(learning_rate=config.sac_lr)
+        imitate_op = imitate_optimizer.minimize(imitate_loss, var_list = main_policy.get_vars('main/pi'))
+
     # Polyak averaging for target variables
     # (control flow because sess.run otherwise evaluates in nondeterministic order)
     with tf.control_dependencies([train_value_op]):
@@ -110,6 +116,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     # All ops to call during one training step
     step_ops = [pi_loss, q1_loss, q2_loss, v_loss, q1, q2, v, logp_pi,
                 train_pi_op, train_value_op, target_update]
+
+    # NOTE : @dhruvramani
+    if config.imitate:
+        imitate_ops = [pi_loss, q1_loss, q2_loss, v_loss, q1, q2, v, logp_pi,
+                        imitate_op]
 
     # Initializing targets to match main variables
     target_init = tf.group([tf.assign(v_targ, v_main)
@@ -203,7 +214,12 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                 for i, x_i in enumerate(x2_ph):
                     feed_dict[x_i] = obs2_list[i]
 
-                outs = sess.run(step_ops, feed_dict)
+                # NOTE @dhruvramani
+                if(not config.imitate):
+                    outs = sess.run(step_ops, feed_dict)
+                else :
+                    outs = sess.run(imitate_ops, feed_dict)
+
                 logger.store(LossPi=outs[0], LossQ1=outs[1], LossQ2=outs[2],
                              LossV=outs[3], Q1Vals=outs[4], Q2Vals=outs[5],
                              VVals=outs[6], LogPi=outs[7])
