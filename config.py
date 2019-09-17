@@ -37,7 +37,7 @@ def argparser():
 
     # --- Coarticulation ---
     parser.add_argument('--is_coart', type=str2bool, default=True)
-    parser.add_argument('--train_bridge', type=str2bool, default=True)
+    parser.add_argument('--train_bridge', type=str2bool, default=False)
     parser.add_argument('--bridge_path', type=str, default="JacoServe.coartl_bridge")
     parser.add_argument('--sac_path', type=str, default="JacoServe.coartl_sac")
     parser.add_argument('--is_train', type=str2bool, default=False)
@@ -46,6 +46,10 @@ def argparser():
     parser.add_argument('--stitch_naive', type=str2bool, default=True)
     parser.add_argument('--imitate',type=str2bool, default=True,
         help="To imitate primitive-1 with SAC")
+    parser.add_argument('--value_reward', type=str2bool, default=False, 
+        help="Use P1 & P2's value fn as rewards for SAC")
+    parser.add_argument("--ps_value_scale", type=float, default=2.0, 
+        help="Scale P2's value function by this factor")
 
     # --- TRPO ---
     parser.add_argument('--max_kl', type=float, default=0.01)
@@ -55,18 +59,18 @@ def argparser():
     parser.add_argument('--vf_iters', type=int, default=5)
 
     # --- SAC ---
-    parser.add_argument('--sac_hid_size', type=int, default=300) # 32
+    parser.add_argument('--sac_hid_size', type=int, default=32) # 32
     parser.add_argument('--sac_num_hid_layers', type=int, default=2)
     parser.add_argument('--sac_activation', type=str, default='relu',
                         choices=['relu', 'elu', 'tanh'])
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--seed', '-s', type=int, default=0)
     parser.add_argument('--sac_epochs', type=int, default=50)
-    parser.add_argument('--sac_steps_per_epoch', type=int, default=1000)
+    parser.add_argument('--sac_steps_per_epoch', type=int, default=10)
     parser.add_argument('--sac_batch_size', type=int, default=100)
     #parser.add_argument('--sac_max_ep_len', type=int, default=1000)
-    parser.add_argument('--sac_replay_size', type=int, default=int(1e6))
-    parser.add_argument('--sac_lr', type=float, default=1e-3)
+    parser.add_argument('--sac_replay_size', type=int, default=int(1e7))
+    parser.add_argument('--sac_lr', type=float, default=1e-1)
     parser.add_argument('--sac_start_steps', type=int, default=10000, 
         help="Number of steps for uniform-random action selection, before running real policy. Helps exploration.")
 

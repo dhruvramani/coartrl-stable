@@ -101,12 +101,6 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     with tf.control_dependencies([train_pi_op]):
         train_value_op = value_optimizer.minimize(value_loss, var_list=value_params)
 
-    # NOTE : @dhruvramani
-    if config.imitate:
-        imitate_loss = 0.5 * tf.reduce_mean((a_ph - pi) ** 2)
-        imitate_optimizer = tf.train.AdamOptimizer(learning_rate=config.sac_lr)
-        train_imitate_op = imitate_optimizer.minimize(imitate_loss, var_list = main_policy.get_vars('main/pi'))
-
     # Polyak averaging for target variables
     # (control flow because sess.run otherwise evaluates in nondeterministic order)
     with tf.control_dependencies([train_value_op]):
@@ -119,8 +113,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
 
     # NOTE : @dhruvramani
     if config.imitate:
-        imitate_ops = [pi_loss, q1_loss, q2_loss, v_loss, q1, q2, v, logp_pi,
-                        train_imitate_op]
+        imitate_loss = 0.5 * tf.reduce_mean((a_ph - pi) ** 2)
+        imitate_optimizer = tf.train.AdamOptimizer(learning_rate=config.sac_lr)
+        train_imitate_op = imitate_optimizer.minimize(imitate_loss, var_list = main_policy.get_vars('main/pi'))
+        imitate_ops = [pi_loss, q1_loss, q2_loss, v_loss, q1, q2, v, logp_pi, imitate_loss,
+                        train_imitate_op, train_value_op, target_update]
 
     # Initializing targets to match main variables
     target_init = tf.group([tf.assign(v_targ, v_main)
@@ -141,12 +138,14 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
 
     def test_agent(n=10):
         global main_policy
+        print("Testing")
         for j in range(n):
             o, r, d, ep_ret, ep_len = test_env.reset(), 0, False, 0, 0
             while not(d or (ep_len == config.sac_max_ep_len)):
                 # Take deterministic actions at test time
                 action, _ = main_policy.step(o, deterministic=True)
                 o, r, d, _ = test_env.step(action)
+                test_env.render()
                 ep_ret += r
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
@@ -178,10 +177,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
         """
         # Stitching SAC
         if(config.is_coart):
-            a, _, _, _ = stitch_pi.step(o)
+            a_p, _, _, _ = stitch_pi.step(o) 
+            a, _ = main_policy.step(o) # NOTE : not sure, have to decide
         else :
             if t > config.sac_start_steps:
-                a = main_policy.step(o)
+                a, _ = main_policy.step(o)
             else:
                 a = env.action_space.sample()
 
@@ -193,14 +193,25 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             env.render()
         
         o2, r, d, _ = env.step(a)
+        if config.value_reward:
+            r = stitch_pi.value(o)
+            if(curr_prim == 1):
+                r = r * config.ps_value_scale
+
         ep_ret += r
         ep_len += 1
 
         d = False if ep_len == config.num_rollouts else d
-        replay_buffer.store(o, a, r, o2, d)
+        if(config.imitate):
+            replay_buffer.store(o, a_p, r, o2, d)
+        else:
+            replay_buffer.store(o, a, r, o2, d)
         o = o2
 
-        if d or (ep_len == config.num_rollouts):
+        if d or (ep_len == config.num_rollouts):            
+            # if config.imitate:
+            #     avg_imt_loss = 0.0
+            
             for j in range(ep_len):
                 batch = replay_buffer.sample_batch(config.sac_batch_size)
                 feed_dict = {a_ph: batch['acts'],
@@ -227,6 +238,12 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                              LossV=outs[3], Q1Vals=outs[4], Q2Vals=outs[5],
                              VVals=outs[6], LogPi=outs[7])
 
+            #     if config.imitate:
+            #         avg_imt_loss += outs[8]
+            
+            # if config.imitate:
+            #     print("Imitation Loss : {}".format(avg_imt_loss / ep_len))
+
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
 
@@ -243,6 +260,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             epoch = t // config.sac_steps_per_epoch
 
             # Save model
+            tf_util.save_state(ckpt_path, var_list)
             if (epoch % save_freq == 0) or (epoch == config.sac_epochs - 1):
                 logger.save_state({'env': env}, None)
 
