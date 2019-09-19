@@ -209,8 +209,8 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
         o = o2
 
         if d or (ep_len == config.num_rollouts):            
-            # if config.imitate:
-            #     avg_imt_loss = 0.0
+            if config.imitate:
+                avg_imt_loss = 0.0
             
             for j in range(ep_len):
                 batch = replay_buffer.sample_batch(config.sac_batch_size)
@@ -238,11 +238,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                              LossV=outs[3], Q1Vals=outs[4], Q2Vals=outs[5],
                              VVals=outs[6], LogPi=outs[7])
 
-            #     if config.imitate:
-            #         avg_imt_loss += outs[8]
+                if config.imitate:
+                    avg_imt_loss += outs[8]
             
-            # if config.imitate:
-            #     print("Imitation Loss : {}".format(avg_imt_loss / ep_len))
+            if config.imitate:
+                print("Imitation Loss : {}".format(avg_imt_loss / ep_len))
 
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
