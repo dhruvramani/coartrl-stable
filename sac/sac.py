@@ -183,7 +183,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             else:
                 a = env.action_space.sample()
 
-        if(not config,p1_value and config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)): # and not config.imitate):
+        if(not config.p1_value and config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)): # and not config.imitate):
             curr_prim = 1
             stitch_pi = primitives[curr_prim]
 
