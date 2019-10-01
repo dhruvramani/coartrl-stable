@@ -6,6 +6,15 @@ import baselines.common.tf_util as tf_util
 from baselines.common.atari_wrappers import TransitionEnvWrapper
 from baselines.common.mpi_running_mean_std import RunningMeanStd
 
+def clip_reward(r, lower_lim=0., upper_lim=10., scale=100.):
+    if (r < lower_lim):
+        return -1
+    else:
+        r = r / scale
+        if (r < upper_lim):
+            return r
+        else:
+            return u
 
 def make_env(env_name, config=None):
     import gym

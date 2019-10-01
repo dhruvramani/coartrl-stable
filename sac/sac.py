@@ -10,7 +10,7 @@ from sac.utils.run_utils import setup_logger_kwargs
 
 from sac.core import PrimitivePolicySAC
 import baselines.common.tf_util as tf_util
-from util import load_model
+from util import load_model, clip_reward, printstar
 
 class ReplayBuffer:
     """
@@ -113,11 +113,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
 
     # NOTE : @dhruvramani
     if config.imitate:
-        imitate_loss = 0.5 * tf.reduce_mean((a_ph - pi) ** 2)
+        imitate_loss = tf.reduce_mean((a_ph - pi) ** 2)
         imitate_optimizer = tf.train.AdamOptimizer(learning_rate=config.sac_lr)
         train_imitate_op = imitate_optimizer.minimize(imitate_loss, var_list = main_policy.get_vars('main/pi'))
         imitate_ops = [pi_loss, q1_loss, q2_loss, v_loss, q1, q2, v, logp_pi, imitate_loss,
-                        train_imitate_op, train_value_op, target_update]
+                        train_imitate_op]#, train_value_op, target_update]
 
     # Initializing targets to match main variables
     target_init = tf.group([tf.assign(v_targ, v_main)
@@ -136,9 +136,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     # Setup model saving
     #logger.setup_tf_saver(sess, inputs={'x': x_ph, 'a': a_ph}, outputs={'mu': mu, 'pi': pi, 'q1': q1, 'q2': q2, 'v': v})
 
-    def test_agent(n=10):
-        global main_policy
-        print("Testing")
+    def test_agent(main_policy, n=10):
         for j in range(n):
             o, r, d, ep_ret, ep_len = test_env.reset(), 0, False, 0, 0
             while not(d or (ep_len == config.sac_max_ep_len)):
@@ -162,7 +160,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
     else :
         stitch_pi = bridge_policy
 
-    while t in range(total_steps):
+    for t in range(total_steps):
 
         """
         Until config.sac_start_steps have elapsed, randomly sample actions
@@ -177,7 +175,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
         """
         # Stitching SAC
         if(config.is_coart):
-            a_p, _, _, _ = stitch_pi.step(o) 
+            a_p, v_p, _, _ = stitch_pi.step(o) 
             a, _ = main_policy.step(o) # NOTE : not sure, have to decide
         else :
             if t > config.sac_start_steps:
@@ -185,27 +183,30 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             else:
                 a = env.action_space.sample()
 
-        if(config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)): # and not config.imitate):
+        if(not config,p1_value and config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)): # and not config.imitate):
             curr_prim = 1
             stitch_pi = primitives[curr_prim]
 
         if config.render:
             env.render()
         
+        if config.is_coart and (config.learn_higher_value or config.imitate):
+            a = a_p
+        
         o2, r, d, _ = env.step(a)
-        if config.value_reward:
-            r = stitch_pi.value(o)
+        if config.is_coart and (config.learn_higher_value or config.p1_value):
+            r = v_p
+            r = clip_reward(r, lower_lim=0.0, upper_lim=25.0, scale=100.0)
             if(curr_prim == 1):
                 r = r * config.ps_value_scale
+            if config.debug:
+                print("Prim : {} - Value : {}".format(curr_prim, r))
 
         ep_ret += r
         ep_len += 1
 
         d = False if ep_len == config.num_rollouts else d
-        if(config.imitate):
-            replay_buffer.store(o, a_p, r, o2, d)
-        else:
-            replay_buffer.store(o, a, r, o2, d)
+        replay_buffer.store(o, a, r, o2, d)
         o = o2
 
         if d or (ep_len == config.num_rollouts):            
@@ -265,8 +266,8 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
                 logger.save_state({'env': env}, None)
 
             # Test the performance of the deterministic version of the agent.
-            print('TESTING AGENT\n\n')
-            test_agent()
+            printstar('TESTING AGENT')
+            test_agent(main_policy)
 
             logger.log_tabular('Epoch', epoch)
             logger.log_tabular('EpRet', with_min_and_max=True)
