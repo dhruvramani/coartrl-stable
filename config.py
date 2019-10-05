@@ -74,7 +74,7 @@ def argparser():
         help="Number of steps for uniform-random action selection, before running real policy. Helps exploration.")
 
     # --- Misc ---
-    parser.add_argument('--num_rollouts', type=int, default=int(512))
+    parser.add_argument('--num_rollouts', type=int, default=10000)
     parser.add_argument('--total_timesteps', type=int, default=int(1e6))
     parser.add_argument('--max_eval_iters', type=int, default=int(1e4))
     parser.add_argument('--render', type=str2bool, default=False, help='Render frames')

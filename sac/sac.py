@@ -138,15 +138,16 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
 
     def test_agent(main_policy, n=10):
         for j in range(n):
-            o, r, d, ep_ret, ep_len = test_env.reset(), 0, False, 0, 0
+            o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
             while not(d or (ep_len == config.sac_max_ep_len)):
                 # Take deterministic actions at test time
                 action, _ = main_policy.step(o, deterministic=True)
-                o, r, d, _ = test_env.step(action)
-                test_env.render()
+                o, r, d, _ = env.step(action)
+                env.render()
                 ep_ret += r
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
+        env.reset()
 
     start_time = time.time()
     o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
@@ -183,7 +184,7 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             else:
                 a = env.action_space.sample()
 
-        if(not config.p1_value and config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)): # and not config.imitate):
+        if(config.is_coart and not config.p1_value and config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(o, init=True, env=env)): # and not config.imitate):
             curr_prim = 1
             stitch_pi = primitives[curr_prim]
 
@@ -199,6 +200,11 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
             r = clip_reward(r, lower_lim=0.0, upper_lim=25.0, scale=100.0)
             if(curr_prim == 1):
                 r = r * config.ps_value_scale
+            if(config.p1_value):
+                _, v2_p, _, _ = stitch_pi.step(o2)
+                r = v2_p - v_p
+                r = clip_reward(r, lower_lim=0.0, upper_lim=10.0, scale=10.0)
+
             if config.debug:
                 print("Prim : {} - Value : {}".format(curr_prim, r))
 

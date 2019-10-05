@@ -14,7 +14,7 @@ def clip_reward(r, lower_lim=0., upper_lim=10., scale=100.):
         if (r < upper_lim):
             return r
         else:
-            return u
+            return upper_lim
 
 def make_env(env_name, config=None):
     import gym
