@@ -34,9 +34,9 @@ def run(config):
         bridge_policy = None
         if(config.train_bridge):
             bridge_policy = get_bridge_policy(env, primitives, config)
-        coartl_sac = get_coartl_sac(env, config, primitives, bridge_policy)
-        printstar("Evaluating SAC for Env: {}".format(config.env))
-        evaluate_policy(env, coartl_sac, config)
+        coartl = get_coartl(env, config, primitives, bridge_policy)
+        printstar("Evaluating Coartl Policy for Env: {}".format(config.env))
+        evaluate_policy(env, coartl, config)
 
     env.close()
 

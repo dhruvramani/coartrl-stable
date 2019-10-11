@@ -39,7 +39,10 @@ def argparser():
     parser.add_argument('--is_coart', type=str2bool, default=True)
     parser.add_argument('--train_bridge', type=str2bool, default=False)
     parser.add_argument('--bridge_path', type=str, default="JacoServe.coartl_bridge")
-    parser.add_argument('--sac_path', type=str, default="JacoServe.coartl_sac")
+    parser.add_argument('--higher_value_path', type=str, default="JacoServe.coartl_sac")
+    parser.add_argument('--coartl_method', type=str, default='trpo',
+                        choices=['sac', 'ddpg', 'trpo'])
+    parser.add_argument('--coartl_path', type=str, default="JacoServe.coartl_final")
     parser.add_argument('--is_train', type=str2bool, default=False)
     parser.add_argument('--eval_all', type=str2bool, default=False)
     parser.add_argument('--bridge_kl', type=float, default=0.1)
@@ -58,7 +61,7 @@ def argparser():
     parser.add_argument('--vf_iters', type=int, default=5)
 
     # --- SAC ---
-    parser.add_argument('--sac_hid_size', type=int, default=32) # 32
+    parser.add_argument('--sac_hid_size', type=str2list, default="400,300") # 32
     parser.add_argument('--sac_num_hid_layers', type=int, default=2)
     parser.add_argument('--sac_activation', type=str, default='relu',
                         choices=['relu', 'elu', 'tanh'])
@@ -72,6 +75,18 @@ def argparser():
     parser.add_argument('--sac_lr', type=float, default=1e-1)
     parser.add_argument('--sac_start_steps', type=int, default=10000, 
         help="Number of steps for uniform-random action selection, before running real policy. Helps exploration.")
+
+    # --- DDPG ---
+    parser.add_argument('--ddpg_pi_lr', type=float, default=1e-3)
+    parser.add_argument('--ddpg_q_lr', type=float, default=1e-3) 
+    parser.add_argument('--act_noise', type=float, default=0.1)  
+    parser.add_argument('--ddpg_hid_size', type=str2list, default="400,300") # 32
+    parser.add_argument('--ddpg_num_hid_layers', type=int, default=2)
+    parser.add_argument('--ddpg_activation', type=str, default='relu',
+                        choices=['relu', 'elu', 'tanh'])
+    parser.add_argument('--ddpg_op_activation', type=str, default='tanh',
+                        choices=['relu', 'elu', 'tanh'])
+
 
     # --- Misc ---
     parser.add_argument('--num_rollouts', type=int, default=10000)

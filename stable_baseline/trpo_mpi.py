@@ -44,21 +44,20 @@ class TRPO(ActorCriticRLModel):
         WARNING: this logging can take a lot of space quickly
     """
 
-    def __init__(self, policy, env, config, env_name, save_path, primitives=None, gamma=0.99, timesteps_per_batch=256, max_kl=0.01, cg_iters=10, lam=0.98,
-                 entcoeff=0.0, cg_damping=1e-2, vf_stepsize=3e-4, vf_iters=3, verbose=0, tensorboard_log=None,
+    def __init__(self, policy, env, config, env_name, save_path, primitives=None, lam=0.98, entcoeff=0.0, verbose=0, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
         super(TRPO, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,
                                    _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
 
         self.using_gail = False
-        self.timesteps_per_batch = timesteps_per_batch
-        self.cg_iters = cg_iters
-        self.cg_damping = cg_damping
-        self.gamma = gamma
+        self.timesteps_per_batch = config.num_rollouts
+        self.cg_iters = config.cg_iters
+        self.cg_damping = config.cg_damping
+        self.gamma = config.gamma
         self.lam = lam
-        self.max_kl = max_kl
-        self.vf_iters = vf_iters
-        self.vf_stepsize = vf_stepsize
+        self.max_kl = config.max_kl
+        self.vf_iters = config.vf_iters
+        self.vf_stepsize = config.vf_stepsize
         self.entcoeff = entcoeff
         self.tensorboard_log = tensorboard_log
         self.full_tensorboard_log = full_tensorboard_log
@@ -154,9 +153,9 @@ class TRPO(ActorCriticRLModel):
                 action = self.policy_pi.pdtype.sample_placeholder([None])
 
                 # NOTE : @dhruvramani
-                if(self.primitives is not None):
+                #if(self.primitives is not None):
                 # NOTE : @nsidn98 for primitive training
-                    primitive_kl = tf.reduce_mean(self.primitives[1].pd.kl(self.policy_pi.pd))
+                #    primitive_kl = tf.reduce_mean(self.primitives[1].pd.kl(self.policy_pi.pd))
 
                 kloldnew = old_policy.proba_distribution.kl(self.policy_pi.proba_distribution)
                 ent = self.policy_pi.proba_distribution.entropy()
@@ -292,7 +291,7 @@ class TRPO(ActorCriticRLModel):
                 if(self.primitives is None):
                     seg_gen = traj_segment_generator(self.policy_pi, self.env, self.timesteps_per_batch, self.config, reward_giver=self.reward_giver, gail=self.using_gail)
                 else :
-                    seg_gen = traj_segment_generator_bridge(self.policy_pi, self.primitives, self.env, self.timesteps_per_batch, self.config, reward_giver=self.reward_giver, gail=self.using_gail)
+                    seg_gen = traj_segment_generator_coartl(self.policy_pi, self.primitives, self.env, self.timesteps_per_batch, self.config, reward_giver=self.reward_giver, gail=self.using_gail)
 
                 episodes_so_far = 0
                 timesteps_so_far = 0

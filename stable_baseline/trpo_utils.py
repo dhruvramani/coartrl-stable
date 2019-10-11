@@ -3,10 +3,11 @@ import numpy as np
 from collections import defaultdict
 
 from stable_baselines.common.vec_env import VecEnv
+from util import clip_reward
 
 # NOTE : @dhruvramani - refer to Stable-Baseline's for the original code
 
-def traj_segment_generator_bridge(policy, primitives, env, horizon, config, reward_giver=None, gail=False):
+def traj_segment_generator_coartl(pi, val_policy, env, horizon, config, reward_giver=None, gail=False):
     t = 0
     ac = env.action_space.sample()
     done = False
@@ -27,19 +28,9 @@ def traj_segment_generator_bridge(policy, primitives, env, horizon, config, rewa
     dones = []
     reward_info = defaultdict(list)
 
-    num_primitives = len(primitives)
-    curr_prim = 0
-    pi = primitives[curr_prim] # NOTE : @dhruvramani - pi depicts the current primitive
-
     while True:
-        if(curr_prim == 0 and pi.is_terminate(ob, init=True, env=env)):
-            curr_prim = 1
-            if(config.stitch_naive):
-                pi = primitives[curr_prim]
-            else :
-                pi = policy
-
         ac, vpred, _, _ = pi.step(ob)
+        v_p = val_policy.value(ob)
 
         if t > 0 and t % horizon == 0:
             dicti = {"observations": obs, "rewards": rews, "vpred": vpreds, "nextvpred": vpred * (1 - done),
@@ -47,6 +38,7 @@ def traj_segment_generator_bridge(policy, primitives, env, horizon, config, rewa
             for key, value in ep_reward.items():
                 dicti.update({"ep_{}".format(key): value})
             yield {key: np.copy(val) for key, val in dicti.items()}
+            ob = env.reset()
             ep_rets = []
             ep_lens = []
             ep_reward = defaultdict(list)
@@ -56,26 +48,27 @@ def traj_segment_generator_bridge(policy, primitives, env, horizon, config, rewa
             dones = []
             acs = []
             t = 0
-            env.reset()
-            curr_prim = 0
-            pi = primitives[curr_prim] 
             vpred = pi.value(ob)
 
         obs.append(ob)
         vpreds.append(vpred)
         acs.append(ac)
 
-        old_ob = ob
         ob, rew, done, info = env.step(ac)
-        
+        v_p1 = val_policy.value(ob)
+
         if(config.render):
             env.render()
 
+        if config.is_coart:
+            rew = v_p1 - v_p
+            rew = clip_reward(rew, lower_lim=0.0, upper_lim=25.0, scale=10.0)
+            rew = -rew
+            if config.debug:
+                print("Value : {}".format(rew))
+
         for key, value in info.items():
             reward_info[key].append(value)
-
-        if(curr_prim == 1):
-            rew = primitives[curr_prim].value(ob) - primitives[curr_prim].value(old_ob)
 
         rews.append(rew)
         dones.append(done)
@@ -86,14 +79,13 @@ def traj_segment_generator_bridge(policy, primitives, env, horizon, config, rewa
         if done:
             ep_rets.append(cur_ep_ret)
             ep_lens.append(cur_ep_len)
-            curr_prim = 0
-            pi = primitives[curr_prim] 
             for key, value in reward_info.items():
                 if isinstance(value[0], (int, float, np.bool_)):
                     if '_mean' in key:
                         ep_reward[key].append(np.mean(value))
                     else:
                         ep_reward[key].append(np.sum(value))
+            ob = env.reset()
 
 def traj_segment_generator(pi, env, horizon, config, reward_giver=None, gail=False):
     t = 0
@@ -125,6 +117,7 @@ def traj_segment_generator(pi, env, horizon, config, reward_giver=None, gail=Fal
             for key, value in ep_reward.items():
                 dicti.update({"ep_{}".format(key): value})
             yield {key: np.copy(val) for key, val in dicti.items()}
+            ob = env.reset()
             ep_rets = []
             ep_lens = []
             ep_reward = defaultdict(list)
@@ -161,6 +154,7 @@ def traj_segment_generator(pi, env, horizon, config, reward_giver=None, gail=Fal
                         ep_reward[key].append(np.mean(value))
                     else:
                         ep_reward[key].append(np.sum(value))
+            ob = env.reset()
 
 def add_vtarg_and_adv(seg, gamma, lam):
     # print(seg.keys())

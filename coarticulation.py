@@ -24,8 +24,7 @@ def get_bridge_policy(env, primitives, config):
 
 	if(config.is_train or model is None):
 		printstar("Training Bridge Policy")
-		trainer = TRPO(PrimitivePolicy, env, primitives=primitives, config=config, env_name=config.bridge_path, save_path=path, timesteps_per_batch=config.num_rollouts,
-			max_kl=config.max_kl, cg_iters=config.cg_iters, cg_damping=config.cg_damping, vf_stepsize=config.vf_stepsize, vf_iters=config.vf_iters)
+		trainer = TRPO(PrimitivePolicy, env, primitives=primitives, config=config, env_name=config.bridge_path, save_path=path)
 		trainer.learn(total_timesteps=config.total_timesteps)
 		model = trainer.policy_pi
 
@@ -33,25 +32,38 @@ def get_bridge_policy(env, primitives, config):
 		evaluate_policy(env, model, config)
 	return model
 
-def get_coartl_sac(env, config, primitives=None, bridge_policy=None):
+def get_coartl(env, config, primitives=None, bridge_policy=None):
 	model = None
-	path = os.path.expanduser(os.path.join(config.policy_dir, config.sac_path))
+	path = os.path.expanduser(os.path.join(config.policy_dir, config.coartl_path))
 	if(os.path.exists(path)):
-		printstar("Loading SAC")
-		model = load_sac(env, config, path) 
+		printstar("Loading {}".format(config.coartl_method.upper()))
+		model = load_coartl(env, config, path) 
 	
 	if(config.is_train or model is None):
-		printstar("Training SAC")
-		test_env = make_env(config.env)
-		model = SAC(env, test_env, path, config, primitives=primitives, bridge_policy=bridge_policy)
+		printstar("Training {}".format(config.coartl_method.upper()))
+		
+		if(config.coartl_method == 'trpo'):
+			trainer = TRPO(PrimitivePolicy, env, primitives=primitives[0], config=config, env_name=config.bridge_path, save_path=path)
+			trainer.learn(total_timesteps=config.total_timesteps)
+			model = trainer.policy_pi
+		elif(config.coartl_method == 'sac'):
+			model = SAC(env, path, config, primitives=primitives, bridge_policy=bridge_policy)
+		elif(config.coartl_method == 'ddpg'):
+			model = DDPG(env, path, config, primitives=primitives, bridge_policy=bridge_policy)
 
 	if(config.eval_all):
 		evaluate_policy(env, model, config)
 
 	return model
 
-def load_sac(env, config, path):
-	policy = PrimitivePolicySAC('main', env, "JacoToss-v1", config)
+def load_coartl(env, config, path):
+	if(config.coartl_method == 'trpo'):
+		policy = PrimitivePolicy(env=env, name="%s/pi" % env_name, ob_env_name="JacoToss-v1", config=config, n_env=1)
+	elif(config.coartl_method == 'sac'):
+		policy = PrimitivePolicySAC('main', env, "JacoToss-v1", config)
+	elif(config.coartl_method == 'ddpg'):
+		policy = PrimitivePolicyDDPG('main', env, "JacoToss-v1", config)
+
 	policy_vars = policy.get_variables()
 	policy_path = load_model(path, policy_vars)
 	return policy

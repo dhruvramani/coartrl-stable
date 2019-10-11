@@ -128,7 +128,7 @@ class PrimitivePolicySAC(object):
         self.env_name = self.name.split('-')[0]
 
         # training
-        self._hid_size = config.sac_hid_size 
+        self._hid_size = [int(i) for i in config.sac_hid_size] 
         self._num_hid_layers = config.sac_num_hid_layers
         self._activation = activation(config.sac_activation)
         self._include_acc = config.primitive_include_acc
@@ -193,7 +193,7 @@ class PrimitivePolicySAC(object):
         with tf.variable_scope("pi"):
             net = self.obz
             for i in range(num_hid_layers):
-                net = self._activation(tf.layers.dense(net, hid_size, name="fc%i" % (i+1), kernel_initializer=U.normc_initializer(1.0)))
+                net = self._activation(tf.layers.dense(net, hid_size[i], name="fc%i" % (i+1), kernel_initializer=U.normc_initializer(1.0)))
 
             mu = tf.layers.dense(net, self.act_dim, activation=None)
             log_std = tf.layers.dense(net, self.act_dim, activation=tf.tanh)
@@ -218,9 +218,9 @@ class PrimitivePolicySAC(object):
             with tf.variable_scope(scope_name, reuse=reuse):
                 net = input
                 for i in range(num_hid_layers):
-                    net = self._activation(tf.layers.dense(net, hid_size, name="fc%i" % (i+1), kernel_initializer=U.normc_initializer(1.0)))
+                    net = self._activation(tf.layers.dense(net, hid_size[i], name="fc%i" % (i+1)))
                 
-                vpred = tf.squeeze(tf.layers.dense(net, 1, name="final", kernel_initializer=U.normc_initializer(1.0)), axis=1)
+                vpred = tf.squeeze(tf.layers.dense(net, 1, name="final"), axis=1)
             return vpred
 
         q1 = value_mvp("q1", tf.concat([self.obz, self.action_ph], axis=-1))

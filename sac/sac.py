@@ -46,7 +46,7 @@ class ReplayBuffer:
 Soft Actor-Critic
 (With slight variations that bring it closer to TD3)
 """
-def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
+def SAC(env, path, config, primitives=None, bridge_policy=None,
         polyak=0.995, alpha=0.2, save_freq=1):
     
     logger_kwargs = dict()
@@ -196,15 +196,12 @@ def SAC(env, test_env, path, config, primitives=None, bridge_policy=None,
         
         o2, r, d, _ = env.step(a)
         if config.is_coart and (config.learn_higher_value or config.p1_value):
-            r = v_p
-            r = clip_reward(r, lower_lim=0.0, upper_lim=25.0, scale=100.0)
+            _, v_p1, _, _ = stitch_pi.step(o2)
+            r = v_p1 - v_p
+            r = clip_reward(r, lower_lim=0.0, upper_lim=25.0, scale=10.0)
             if(curr_prim == 1):
                 r = r * config.ps_value_scale
-            if(config.p1_value):
-                _, v2_p, _, _ = stitch_pi.step(o2)
-                r = v2_p - v_p
-                r = clip_reward(r, lower_lim=0.0, upper_lim=10.0, scale=10.0)
-
+            #r = -r
             if config.debug:
                 print("Prim : {} - Value : {}".format(curr_prim, r))
 
