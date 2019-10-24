@@ -152,10 +152,10 @@ class TRPO(ActorCriticRLModel):
                 observation = self.policy_pi.obs_ph
                 action = self.policy_pi.pdtype.sample_placeholder([None])
 
-                # NOTE : @dhruvramani
-                #if(self.primitives is not None):
-                # NOTE : @nsidn98 for primitive training
-                #    primitive_kl = tf.reduce_mean(self.primitives[1].pd.kl(self.policy_pi.pd))
+                #NOTE : @dhruvramani
+                if(self.primitives is not None):
+                #NOTE : @nsidn98 for primitive training
+                   primitive_kl = tf.reduce_mean(self.primitives.pd.kl(self.policy_pi.pd))
 
                 kloldnew = old_policy.proba_distribution.kl(self.policy_pi.proba_distribution)
                 ent = self.policy_pi.proba_distribution.entropy()
@@ -170,7 +170,7 @@ class TRPO(ActorCriticRLModel):
                                old_policy.proba_distribution.logp(action))
                 surrgain = tf.reduce_mean(ratio * atarg)
 
-                optimgain = surrgain + entbonus #+ self.config.bridge_kl * primitive_kl
+                optimgain = surrgain + entbonus + self.config.kl_const * primitive_kl
 
                 losses = [optimgain, meankl, entbonus, surrgain, meanent]
                 self.loss_names = ["optimgain", "meankl", "entloss", "surrgain", "entropy"]

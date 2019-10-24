@@ -31,10 +31,7 @@ def run(config):
             prim_env.close()
 
     if(config.is_coart):
-        bridge_policy = None
-        if(config.train_bridge):
-            bridge_policy = get_bridge_policy(env, primitives, config)
-        coartl = get_coartl(env, config, primitives, bridge_policy)
+        coartl = get_coartl(env, config, primitives)
         printstar("Evaluating Coartl Policy for Env: {}".format(config.env))
         evaluate_policy(env, coartl, config)
 

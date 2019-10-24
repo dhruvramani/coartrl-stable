@@ -44,8 +44,7 @@ class ReplayBuffer:
 """
 Deep Deterministic Policy Gradient (DDPG)
 """
-def DDPG(env, path, config, primitives=None, bridge_policy=None,
-        polyak=0.995, alpha=0.2, save_freq=1):
+def DDPG(env, path, config, primitives=None, polyak=0.995, alpha=0.2, save_freq=1):
     """
     Args:
         env_fn : A function which creates a copy of the environment.
@@ -182,8 +181,6 @@ def DDPG(env, path, config, primitives=None, bridge_policy=None,
     curr_prim = 0
     if(config.stitch_naive):
         stitch_pi = primitives[curr_prim]
-    else :
-        stitch_pi = bridge_policy
 
     for t in range(total_steps):
 
@@ -217,7 +214,7 @@ def DDPG(env, path, config, primitives=None, bridge_policy=None,
         if config.is_coart and (config.learn_higher_value or config.p1_value):
             _, q_p1  = stitch_pi.step(o2)
             r = q_p1 - q_p
-            r = clip_reward(r, lower_lim=0.0, upper_lim=25.0, scale=100.0)
+            r = clip_reward(r, config)
             if(curr_prim == 1):
                 r = r * config.ps_value_scale
 
@@ -267,8 +264,6 @@ def DDPG(env, path, config, primitives=None, bridge_policy=None,
             curr_prim = 0
             if(config.stitch_naive):
                 stitch_pi = primitives[curr_prim]
-            else :
-                stitch_pi = bridge_policy
 
         # End of epoch wrap-up
         if t > 0 and t % config.sac_per_epoch == 0:
@@ -298,8 +293,6 @@ def DDPG(env, path, config, primitives=None, bridge_policy=None,
             curr_prim = 0
             if(config.stitch_naive):
                 stitch_pi = primitives[curr_prim]
-            else :
-                stitch_pi = bridge_policy
 
         return main_policy
 

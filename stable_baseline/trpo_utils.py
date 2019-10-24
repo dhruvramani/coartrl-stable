@@ -62,8 +62,8 @@ def traj_segment_generator_coartl(pi, val_policy, env, horizon, config, reward_g
 
         if config.is_coart:
             rew = v_p1 - v_p
-            rew = clip_reward(rew, lower_lim=0.0, upper_lim=25.0, scale=10.0)
-            rew = -rew
+            rew = clip_reward(rew, config)
+            #rew = -rew
             if config.debug:
                 print("Value : {}".format(rew))
 

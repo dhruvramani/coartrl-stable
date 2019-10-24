@@ -12,6 +12,8 @@ from sac.core import PrimitivePolicySAC
 import baselines.common.tf_util as tf_util
 from util import load_model, clip_reward, printstar
 
+# TODO : Make changes to only incorporate higher level value functions
+
 class ReplayBuffer:
     """
     A simple FIFO experience replay buffer for SAC agents.
@@ -46,8 +48,7 @@ class ReplayBuffer:
 Soft Actor-Critic
 (With slight variations that bring it closer to TD3)
 """
-def SAC(env, path, config, primitives=None, bridge_policy=None,
-        polyak=0.995, alpha=0.2, save_freq=1):
+def SAC(env, path, config, primitives=None, polyak=0.995, alpha=0.2, save_freq=1):
     
     logger_kwargs = dict()
     logger = EpochLogger(**logger_kwargs)
@@ -158,8 +159,6 @@ def SAC(env, path, config, primitives=None, bridge_policy=None,
     curr_prim = 0
     if(config.stitch_naive):
         stitch_pi = primitives[curr_prim]
-    else :
-        stitch_pi = bridge_policy
 
     for t in range(total_steps):
 
@@ -198,7 +197,7 @@ def SAC(env, path, config, primitives=None, bridge_policy=None,
         if config.is_coart and (config.learn_higher_value or config.p1_value):
             _, v_p1, _, _ = stitch_pi.step(o2)
             r = v_p1 - v_p
-            r = clip_reward(r, lower_lim=0.0, upper_lim=25.0, scale=10.0)
+            r = clip_reward(r, config)
             if(curr_prim == 1):
                 r = r * config.ps_value_scale
             #r = -r
@@ -254,8 +253,6 @@ def SAC(env, path, config, primitives=None, bridge_policy=None,
             curr_prim = 0
             if(config.stitch_naive):
                 stitch_pi = primitives[curr_prim]
-            else :
-                stitch_pi = bridge_policy
 
             tf_util.save_state(ckpt_path, var_list)
 
@@ -292,7 +289,5 @@ def SAC(env, path, config, primitives=None, bridge_policy=None,
             curr_prim = 0
             if(config.stitch_naive):
                 stitch_pi = primitives[curr_prim]
-            else :
-                stitch_pi = bridge_policy
 
     return main_policy

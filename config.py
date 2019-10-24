@@ -36,29 +36,43 @@ def argparser():
     parser.add_argument('--primitive_use_term', type=str2bool, default=True)
 
     # --- Coarticulation ---
-    parser.add_argument('--is_coart', type=str2bool, default=True)
-    parser.add_argument('--train_bridge', type=str2bool, default=False)
-    parser.add_argument('--bridge_path', type=str, default="JacoServe.coartl_bridge")
-    parser.add_argument('--higher_value_path', type=str, default="JacoServe.coartl_sac")
-    parser.add_argument('--coartl_method', type=str, default='trpo',
-                        choices=['sac', 'ddpg', 'trpo'])
-    parser.add_argument('--coartl_path', type=str, default="JacoServe.coartl_final")
-    parser.add_argument('--is_train', type=str2bool, default=False)
-    parser.add_argument('--eval_all', type=str2bool, default=False)
-    parser.add_argument('--bridge_kl', type=float, default=0.1)
+    parser.add_argument('--is_train', type=str2bool, default=False)    
     parser.add_argument('--stitch_naive', type=str2bool, default=True)
-    parser.add_argument('--imitate',type=str2bool, default=False, help="To imitate primitive-1 with SAC")
-    parser.add_argument('--p1_value', type=str2bool, default=False, help="Train SAC on single primitive with Value as rewards")
-    parser.add_argument('--learn_higher_value', type=str2bool, default=True, help="Use P1 & P2's value fn as rewards to learn higher value fn. from SAC")
-    parser.add_argument("--ps_value_scale", type=float, default=2.0, help="Scale P2's value function by this factor")
-    parser.add_argument('--higher_rev', type=str2bool, default=False, help="Learn Coart policy using higher value function as the reward")
+    parser.add_argument('--is_coart', type=str2bool, default=True)
+    parser.add_argument('--higher_value_path', type=str, default="JacoServe.coartl_value")
+    parser.add_argument('--coartl_path', type=str, default="JacoServe.coartl_final")
 
-    # --- TRPO ---
+    parser.add_argument('--coartl_method', type=str, default='trpo',
+                        choices=['sac', 'ddpg', 'trpo', 'ppo'])
+
+    parser.add_argument('--learn_higher_value', type=str2bool, default=False, help="Use P1 & P2's value fn as rewards to learn higher value fn. from SAC")
+    parser.add_argument("--ps_value_scale", type=float, default=2.0, help="Scale P2's value function by this factor")
+
+    #parser.add_argument('--imitate',type=str2bool, default=False, help="To imitate primitive-1 with SAC")
+    #parser.add_argument('--p1_value', type=str2bool, default=False, help="Train SAC on single primitive with Value as rewards")
+    #parser.add_argument('--higher_rev', type=str2bool, default=False, help="Learn Coart policy using higher value function as the reward")
+
+    parser.add_argument("--clip_upper", type=float, default=10.0)
+    parser.add_argument("--clip_lower", type=float, default=0.0)
+    parser.add_argument("--clip_scale", type=float, default=100.0)
+    parser.add_argument("--kl_const", type=float, default=0.5)
+
+
+    # --- TRPO & PPO ---
     parser.add_argument('--max_kl', type=float, default=0.01)
     parser.add_argument('--cg_iters', type=int, default=10)
     parser.add_argument('--cg_damping', type=float, default=0.1)
     parser.add_argument('--vf_stepsize', type=float, default=1e-3)
     parser.add_argument('--vf_iters', type=int, default=5)
+
+    parser.add_argument('--max_iters', type=int, default=100) # 10001
+    parser.add_argument('--lr_decay', type=str2bool, default=True)
+    parser.add_argument('--clip_param', type=float, default=0.2)
+    parser.add_argument('--entcoeff', type=float, default=0.0)
+    parser.add_argument('--optim_epochs', type=int, default=10)
+    parser.add_argument('--optim_stepsize', type=float, default=1e-4)
+    parser.add_argument('--optim_batchsize', type=int, default=64)
+    parser.add_argument('--trans_max_grad_norm', type=float, default=10.0)
 
     # --- SAC ---
     parser.add_argument('--sac_hid_size', type=str2list, default="400,300") # 32
@@ -87,8 +101,8 @@ def argparser():
     parser.add_argument('--ddpg_op_activation', type=str, default='tanh',
                         choices=['relu', 'elu', 'tanh'])
 
-
     # --- Misc ---
+    parser.add_argument('--ckpt_save_step', type=int, default=10)
     parser.add_argument('--num_rollouts', type=int, default=10000)
     parser.add_argument('--total_timesteps', type=int, default=int(1e6))
     parser.add_argument('--max_eval_iters', type=int, default=int(1e4))

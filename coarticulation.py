@@ -6,62 +6,63 @@ import numpy as np
 from sac.sac import SAC
 from sac.core import PrimitivePolicySAC
 
-from stable_baseline.trpo_mpi import TRPO
+from transition.trainer import Trainer
+from transition.ppolicy import PrimitivePolicy
+from transition.rollouts import traj_segment_generator_coart
 
 from util import *
-from primitive_policy import PrimitivePolicy
 
-from primitive import load_primitive
-from main import evaluate_policy
+def get_po_policy(env, primitives, config, path):
+	policy = PrimitivePolicy(env=env, name="%s/pi" % path, ob_env_name="JacoToss-v1", config=config)
+	old_policy = PrimitivePolicy(env=env, name="%s/old_pi" % path, ob_env_name="JacoToss-v1", config=config)
 
-def get_bridge_policy(env, primitives, config):
-	model = None
-	path = os.path.expanduser(os.path.join(config.policy_dir, config.bridge_path))
+	varlist = policy.get_variables() + old_policy.get_variables()
+	policy_path = load_model(path, varlist)
 	
+	trainer = Trainer(env, policy, old_policy, primitives, config, path)
+    rollout = traj_segment_generator_coart(env, primitives, policy,  stochastic=False, config=config)
+    trainer.train(rollout)
+    return policy
+
+def get_higher_value(env, config, primitives):
+	model = None
+	path = os.path.expanduser(os.path.join(config.policy_dir, config.higher_value_path))
 	if(os.path.exists(path)):
-		printstar("Loading Bridge Policy")
-		model = load_primitive(env, config, path, config.bridge_path, config.env)
-
-	if(config.is_train or model is None):
-		printstar("Training Bridge Policy")
-		trainer = TRPO(PrimitivePolicy, env, primitives=primitives, config=config, env_name=config.bridge_path, save_path=path)
-		trainer.learn(total_timesteps=config.total_timesteps)
-		model = trainer.policy_pi
-
-	if(config.eval_all):
-		evaluate_policy(env, model, config)
+		printstar("Loading Higher Level Value Function")
+		model = load_coartl(env, config, path, "sac")
+	else :
+		config.learn_higher_value = True
+		model = SAC(env, path, config, primitives=primitives)
 	return model
 
-def get_coartl(env, config, primitives=None, bridge_policy=None):
+
+def get_coartl(env, config, primitives=None):
 	model = None
 	path = os.path.expanduser(os.path.join(config.policy_dir, config.coartl_path))
+
 	if(os.path.exists(path)):
 		printstar("Loading {}".format(config.coartl_method.upper()))
-		model = load_coartl(env, config, path) 
+		model = load_coartl(env, config, path, config.coartl_method) 
 	
 	if(config.is_train or model is None):
+		config.is_train = True
 		printstar("Training {}".format(config.coartl_method.upper()))
 		
-		if(config.coartl_method == 'trpo'):
-			trainer = TRPO(PrimitivePolicy, env, primitives=primitives[0], config=config, env_name=config.bridge_path, save_path=path)
-			trainer.learn(total_timesteps=config.total_timesteps)
-			model = trainer.policy_pi
+		if(config.coartl_method == 'trpo' or config.coartl_method == 'ppo'):
+			model = get_po_policy(env, primitives, config, path)
 		elif(config.coartl_method == 'sac'):
-			model = SAC(env, path, config, primitives=primitives, bridge_policy=bridge_policy)
+			model = SAC(env, path, config, primitives=primitives)
 		elif(config.coartl_method == 'ddpg'):
-			model = DDPG(env, path, config, primitives=primitives, bridge_policy=bridge_policy)
-
-	if(config.eval_all):
-		evaluate_policy(env, model, config)
+			model = DDPG(env, path, config, primitives=primitives)
 
 	return model
 
-def load_coartl(env, config, path):
-	if(config.coartl_method == 'trpo'):
-		policy = PrimitivePolicy(env=env, name="%s/pi" % env_name, ob_env_name="JacoToss-v1", config=config, n_env=1)
-	elif(config.coartl_method == 'sac'):
+def load_coartl(env, config, path, method):
+	if(method == 'trpo' or method == 'ppo'):
+		policy = PrimitivePolicy(env=env, name="%s/pi" % path, ob_env_name="JacoToss-v1", config=config)
+	elif(method == 'sac'):
 		policy = PrimitivePolicySAC('main', env, "JacoToss-v1", config)
-	elif(config.coartl_method == 'ddpg'):
+	elif(method == 'ddpg'):
 		policy = PrimitivePolicyDDPG('main', env, "JacoToss-v1", config)
 
 	policy_vars = policy.get_variables()
