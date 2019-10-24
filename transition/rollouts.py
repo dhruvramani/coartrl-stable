@@ -80,7 +80,7 @@ def add_advantage_rl(seg, gamma, lam):
     assert np.isfinite(seg["next_vpred"]).all()
     assert np.isfinite(seg["adv"]).all()
 
-def traj_segment_generator_coart(env, primitives, pi, stochastic, config, training_inference=False):
+def traj_segment_generator_coart(env, pi, primitives, higher_value, stochastic, config, training_inference=False):
     t = 0
     ac = env.action_space.sample()
     done = False
@@ -111,11 +111,11 @@ def traj_segment_generator_coart(env, primitives, pi, stochastic, config, traini
         cv2.moveWindow(env.spec.id, 0, 0)
 
     while True:
-        if(config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(ob, init=True, env=env)):
-            curr_prim = 1
-            stitch_pi = primitives[curr_prim]
+        #if(config.stitch_naive and curr_prim == 0 and stitch_pi.is_terminate(ob, init=True, env=env)):
+        #    curr_prim = 1
+        #    stitch_pi = primitives[curr_prim]
 
-        ac, vpred = pi.act(ob, stochastic)
+        ac, vpred = pi.step(ob, stochastic)
 
         if t >= config.num_rollouts and config.is_train and not training_inference:
             dicti = {"ob": obs, "rew": rews, "prim1s":prim1s, "vpred": vpreds, "next_vpred": vpred * (1 - done),
@@ -141,17 +141,17 @@ def traj_segment_generator_coart(env, primitives, pi, stochastic, config, traini
         obs.append(ob)
         vpreds.append(vpred)
         
-        vpred_p = stitch_pi.value(ob, stochastic)
+        vpred_p = stitch_pi.value(ob, stochastic) # higher_value.value(ob)
         
         acs.append(ac)
-        vob = render_frame(env, cur_ep_len, cur_ep_ret, config.rl_method, config.render, config.record, caption_off=config.video_caption_off)
+        vob = render_frame(env, cur_ep_len, cur_ep_ret, config.coartl_method, config.render, None, None)
         visual_obs.append(vob)
         
         ob, rew, done, info = env.step(ac)
         for key, value in info.items():
             reward_info[key].append(value)
 
-        ac_1, vpred_p1 = stitch_pi.act(ob, stochastic)
+        vpred_p1 = stitch_pi.value(ob, stochastic) #higher_value.value(ob) 
 
         rew = vpred_p1 - vpred_p 
         rew = clip_reward(rew)
@@ -167,9 +167,7 @@ def traj_segment_generator_coart(env, primitives, pi, stochastic, config, traini
         t += 1
 
         if done:
-            vob = render_frame(
-                env, cur_ep_len, cur_ep_ret, config.rl_method, config.render,
-                config.record, caption_off=config.video_caption_off)
+            vob = render_frame(env, cur_ep_len, cur_ep_ret, config.coartl_method, config.render, None, None)
             visual_obs.append(vob)  # add last frame
             ep_rets.append(cur_ep_ret)
             ep_lens.append(cur_ep_len)

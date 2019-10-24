@@ -8,8 +8,7 @@ from baselines.common.distributions import CategoricalPdType
 from baselines.common.atari_wrappers import TransitionEnvWrapper
 import baselines.common.tf_util as U
 
-import ops as ops
-from util import make_env
+from util import make_env, activation
 
 class PrimitivePolicy(object):
     def __init__(self, name, env, ob_env_name, config=None):
@@ -24,7 +23,7 @@ class PrimitivePolicy(object):
         self._hid_size = config.primitive_hid_size
         self._num_hid_layers = config.primitive_num_hid_layers
         self._gaussian_fixed_var = config.primitive_fixed_var
-        self._activation = ops.activation(config.primitive_activation)
+        self._activation = activation(config.primitive_activation)
         self._include_acc = config.primitive_include_acc
 
         # properties
@@ -114,14 +113,14 @@ class PrimitivePolicy(object):
         self._act = U.function([stochastic] + self.obs, [ac, self.vpred])
         self._value = U.function([stochastic] + self.obs, self.vpred)
 
-    def act(self, ob, stochastic):
+    def step(self, ob, stochastic=True):
         if self.hard_coded:
             return self.primitive_env.unwrapped.act(ob), 0
         ob_list = self.get_ob_list(ob)
         ac, vpred = self._act(stochastic, *ob_list)
         return ac[0], vpred[0]
 
-    def value(self, ob, stochastic):
+    def value(self, ob, stochastic=True):
         if self.hard_coded:
             return 0
         ob_list = self.get_ob_list(ob)

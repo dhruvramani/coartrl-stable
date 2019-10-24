@@ -1,21 +1,27 @@
 import os.path as osp
 import os
+import time
 from collections import defaultdict
+from contextlib import contextmanager
 
 import numpy as np
 import tensorflow as tf
 from mpi4py import MPI
-from tqdm import trange
 import h5py
+from tqdm import trange
+import moviepy.editor as mpy
 
 from baselines.common import zipsame
 from baselines import logger
+from baselines.common import colorize
 import baselines.common.tf_util as U
 from baselines.common.mpi_adam import MpiAdam
+from baselines.common.cg import cg
 from baselines.statistics import stats
 
-import rollouts as rollouts
-from dataset import Dataset
+import dill
+import transition.rollouts as rollouts
+import transition.dataset as dataset
 
 class Trainer(object):
     def __init__(self, env, policy, old_policy, primitives, config, path):
@@ -38,6 +44,12 @@ class Trainer(object):
         self.global_step = tf.Variable(0, name='global_step', dtype=tf.int64, trainable=False)
         self.update_global_step = tf.assign(self.global_step, self.global_step + 1)
 
+        self._is_chef = (MPI.COMM_WORLD.Get_rank() == 0)
+        self._num_workers = MPI.COMM_WORLD.Get_size()
+        if self._is_chef:
+            self.summary_name = ["reward", "length"]
+            self.summary_name += env.unwrapped.reward_type
+
         # build loss/optimizers
         if self._config.coartl_method == 'trpo':
             self._build_trpo()
@@ -49,7 +61,6 @@ class Trainer(object):
         if self._is_chef and self._config.is_train:
             self.ep_stats = stats(self.summary_name)
             self.writer = U.file_writer(config.log_dir)
-
     @contextmanager
     def timed(self, msg):
         if self._is_chef:
@@ -77,6 +88,7 @@ class Trainer(object):
         ac = pi.pdtype.sample_placeholder([None], name='action')
         atarg = tf.placeholder(dtype=tf.float32, shape=[None], name='advantage')
         ret = tf.placeholder(dtype=tf.float32, shape=[None], name='return')
+        prim1 = tf.placeholder(dtype=tf.float32, shape=[None], name='prim1')
 
         lrmult = tf.placeholder(name='lrmult', dtype=tf.float32, shape=[])
         self._clip_param = config.clip_param * lrmult
@@ -85,12 +97,12 @@ class Trainer(object):
         var_list = pi.get_trainable_variables()
         self._adam = MpiAdam(var_list)
 
-        fetch_dict = self.policy_loss_ppo(pi, oldpi, ac, atarg, ret)
+        fetch_dict = self.policy_loss_ppo(pi, oldpi, ac, atarg, ret, prim1)
         if self._is_chef:
             self.summary_name += ['ppo/' + key for key in fetch_dict.keys()]
             self.summary_name += ['ppo/grad_norm', 'ppo/grad_norm_clipped']
         fetch_dict['g'] = U.flatgrad(fetch_dict['total_loss'], var_list)
-        self._loss = U.function([lrmult] + obs + [ac, atarg, ret], fetch_dict)
+        self._loss = U.function([lrmult] + obs + [ac, atarg, ret, prim1], fetch_dict)
         self._update_oldpi = U.function([], [], updates=[
             tf.assign(oldv, newv) for (oldv, newv) in zipsame(
                 oldpi.get_variables(), pi.get_variables())])
@@ -113,11 +125,11 @@ class Trainer(object):
 
         # policy
         all_var_list = pi.get_trainable_variables()
-        self.pol_var_list = [v for v in all_var_list if v.name.split("/")[2].startswith("pol")]
-        self.vf_var_list = [v for v in all_var_list if v.name.split("/")[2].startswith("vf")]
+        self.pol_var_list = [v for v in all_var_list if "pol" in v.name]
+        self.vf_var_list = [v for v in all_var_list if "vf" in v.name]
         self._vf_adam = MpiAdam(self.vf_var_list)
 
-        self.primitive_kl = self._config.kl_const * (prim1 * tf.reduce_mean(primitives[0].pd.kl(pi.pd)) + (1 - prim1) * tf.reduce_mean(primitives[1].pd.kl(pi.pd)))
+        primitive_kl = self._config.kl_const * (prim1 * tf.reduce_mean(primitives[0].pd.kl(pi.pd)) + (1 - prim1) * tf.reduce_mean(primitives[1].pd.kl(pi.pd)))
 
         kl_oldnew = oldpi.pd.kl(pi.pd)
         ent = pi.pd.entropy()
@@ -129,14 +141,14 @@ class Trainer(object):
 
         ratio = tf.exp(pi.pd.logp(ac) - oldpi.pd.logp(ac))
         pol_surr = tf.reduce_mean(ratio * atarg)
-        pol_loss = pol_surr + pol_entpen + self.primitive_kl
+        pol_loss = pol_surr + pol_entpen + primitive_kl
 
         pol_losses = {'pol_loss': pol_loss,
                       'pol_surr': pol_surr,
                       'pol_entpen': pol_entpen,
                       'kl': mean_kl,
                       'entropy': mean_ent, #}
-                      'primitive_kl' : self.primitive_kl}
+                      'primitive_kl' : primitive_kl}
 
         if self._is_chef:
             self.summary_name += ['trpo/vf_loss']
@@ -156,7 +168,7 @@ class Trainer(object):
         gvp = tf.add_n([tf.reduce_sum(g*tangent) for (g, tangent) in zipsame(klgrads, tangents)])  # pylint: disable=E1111
         fvp = U.flatgrad(gvp, self.pol_var_list)
 
-        self.compute_primitive_kl = U.function(obs + [ac, atarg, prim1], self.primitive_kl)
+        self.compute_primitive_kl = U.function(obs + [ac, atarg, prim1], primitive_kl)
         self._update_oldpi = U.function([], [], updates=[
             tf.assign(oldv, newv) for (oldv, newv) in zipsame(oldpi.get_variables(), pi.get_variables())])
         self._compute_losses = U.function(obs + [ac, atarg, prim1], pol_losses)
@@ -173,8 +185,8 @@ class Trainer(object):
         MPI.COMM_WORLD.Bcast(th_init, root=0)
         self._set_from_flat(th_init)
         self._vf_adam.sync()
-        
-    def policy_loss_ppo(self, pi, oldpi, ac, atarg, ret):
+
+    def policy_loss_ppo(self, pi, oldpi, ac, atarg, ret, prim1):
         kl_oldnew = oldpi.pd.kl(pi.pd)
         ent = pi.pd.entropy()
         mean_kl = U.mean(kl_oldnew)
@@ -190,7 +202,9 @@ class Trainer(object):
         surr2 = U.clip(ratio, 1.0 - self._clip_param, 1.0 + self._clip_param) * atarg
         pol_surr = -U.mean(tf.minimum(surr1, surr2))
         vf_loss = U.mean(tf.square(pi.vpred - ret))
-        total_loss = pol_surr + pol_entpen + vf_loss
+        primitive_kl = self._config.kl_const * (prim1 * tf.reduce_mean(self.primitives[0].pd.kl(pi.pd)) + (1 - prim1) * tf.reduce_mean(self.primitives[1].pd.kl(pi.pd)))
+
+        total_loss = pol_surr + pol_entpen + vf_loss + primitive_kl
 
         losses = {'total_loss': total_loss,
                   'action_loss': action_loss,
@@ -198,7 +212,8 @@ class Trainer(object):
                   'pol_entpen': pol_entpen,
                   'kl': mean_kl,
                   'entropy': mean_ent,
-                  'vf_loss': vf_loss}
+                  'vf_loss': vf_loss,
+                  'primitive_kl': primitive_kl}
 
         return losses
 
@@ -295,11 +310,6 @@ class Trainer(object):
             stepsize = 1.0
             thbefore = self._get_flat()
             for _ in range(10):
-
-                primitive_klval = self.compute_primitive_kl(*args) # Treat is like logging
-                with open('./klvalue.txt', 'w+') as f:
-                    f.write("{}\n".format(primitive_klval))
-
                 thnew = thbefore + fullstep * stepsize
                 self._set_from_flat(thnew)
                 meanlosses = self._compute_losses(*args)
@@ -350,7 +360,7 @@ class Trainer(object):
 
     def _update_policy_ppo(self, seg):
         pi = self.policy
-        ob, ac, atarg, tdlamret = seg["ob"], seg["ac"], seg["adv"], seg["tdlamret"]
+        ob, ac, atarg, tdlamret, prim1s = seg["ob"], seg["ac"], seg["adv"], seg["tdlamret"], seg["prim1s"]
         atarg = (atarg - atarg.mean()) / max(atarg.std(), 0.000001)
 
         if self._is_chef:
@@ -358,7 +368,7 @@ class Trainer(object):
 
         optim_batchsize = min(self._optim_batchsize, ob.shape[0])
         # prepare batches
-        d = dataset.Dataset(dict(ob=ob, ac=ac, atarg=atarg, vtarg=tdlamret), shuffle=True)
+        d = dataset.Dataset(dict(ob=ob, ac=ac, atarg=atarg, vtarg=tdlamret, prim1s=prim1s), shuffle=True)
 
         ob_dict = self._env.get_ob_dict(ob)
         for ob_name in pi.ob_type:
@@ -371,7 +381,7 @@ class Trainer(object):
                 for batch in d.iterate_once(optim_batchsize):
                     ob_list = pi.get_ob_list(batch["ob"])
                     fetched = self._loss(self._cur_lrmult, *ob_list,
-                                        batch["ac"], batch["atarg"], batch["vtarg"])
+                                        batch["ac"], batch["atarg"], batch["vtarg"], batch["prim1s"])
                     self._adam.update(fetched['g'], self._optim_stepsize * self._cur_lrmult)
                     if self._is_chef:
                         for key, value in fetched.items():

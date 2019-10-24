@@ -40,9 +40,9 @@ def argparser():
     parser.add_argument('--stitch_naive', type=str2bool, default=True)
     parser.add_argument('--is_coart', type=str2bool, default=True)
     parser.add_argument('--higher_value_path', type=str, default="JacoServe.coartl_value")
-    parser.add_argument('--coartl_path', type=str, default="JacoServe.coartl_final")
+    parser.add_argument('--coartl_path', type=str, default="JacoServe.coartl_result")
 
-    parser.add_argument('--coartl_method', type=str, default='trpo',
+    parser.add_argument('--coartl_method', type=str, default='ppo',
                         choices=['sac', 'ddpg', 'trpo', 'ppo'])
 
     parser.add_argument('--learn_higher_value', type=str2bool, default=False, help="Use P1 & P2's value fn as rewards to learn higher value fn. from SAC")

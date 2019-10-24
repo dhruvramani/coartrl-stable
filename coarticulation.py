@@ -12,17 +12,17 @@ from transition.rollouts import traj_segment_generator_coart
 
 from util import *
 
-def get_po_policy(env, primitives, config, path):
+def get_po_policy(env, primitives, higher_value, config, path):
 	policy = PrimitivePolicy(env=env, name="%s/pi" % path, ob_env_name="JacoToss-v1", config=config)
 	old_policy = PrimitivePolicy(env=env, name="%s/old_pi" % path, ob_env_name="JacoToss-v1", config=config)
 
 	varlist = policy.get_variables() + old_policy.get_variables()
 	policy_path = load_model(path, varlist)
-	
+
 	trainer = Trainer(env, policy, old_policy, primitives, config, path)
-    rollout = traj_segment_generator_coart(env, primitives, policy,  stochastic=False, config=config)
-    trainer.train(rollout)
-    return policy
+	rollout = traj_segment_generator_coart(env, policy, primitives, higher_value, stochastic=True, config=config)
+	trainer.train(rollout)
+	return policy
 
 def get_higher_value(env, config, primitives):
 	model = None
@@ -39,6 +39,8 @@ def get_higher_value(env, config, primitives):
 def get_coartl(env, config, primitives=None):
 	model = None
 	path = os.path.expanduser(os.path.join(config.policy_dir, config.coartl_path))
+	higher_value = None
+	#higher_value = get_higher_value(env, config, primitives)
 
 	if(os.path.exists(path)):
 		printstar("Loading {}".format(config.coartl_method.upper()))
@@ -49,7 +51,7 @@ def get_coartl(env, config, primitives=None):
 		printstar("Training {}".format(config.coartl_method.upper()))
 		
 		if(config.coartl_method == 'trpo' or config.coartl_method == 'ppo'):
-			model = get_po_policy(env, primitives, config, path)
+			model = get_po_policy(env, primitives, higher_value, config, path)
 		elif(config.coartl_method == 'sac'):
 			model = SAC(env, path, config, primitives=primitives)
 		elif(config.coartl_method == 'ddpg'):

@@ -5,19 +5,19 @@ import numpy as np
 
 from util import *
 from stable_baseline.trpo_mpi import TRPO
-from primitive_policy import PrimitivePolicy
+from transition.ppolicy import PrimitivePolicy
 
-def learn_primitive(env, config, save_path, env_name):
-    print("Training Primitive : ", save_path.split("/")[-1])
-    model = TRPO(PrimitivePolicy, env, max_kl=config.max_kl, config=config, env_name=env_name, save_path=save_path)
+# def learn_primitive(env, config, save_path, env_name):
+#     print("Training Primitive : ", save_path.split("/")[-1])
+#     model = TRPO(PrimitivePolicy, env, max_kl=config.max_kl, config=config, env_name=env_name, save_path=save_path)
 
-    model.learn(total_timesteps=config.total_timesteps)
-    return model.policy_pi
+#     model.learn(total_timesteps=config.total_timesteps)
+#     return model.policy_pi
 
 def load_primitive(env, config, path, env_name, ob_env_name=None):
    if(ob_env_name is None):
       ob_env_name = env_name
-   policy = PrimitivePolicy(env=env, name="%s/pi" % env_name, ob_env_name=ob_env_name, config=config, n_env=1)
+   policy = PrimitivePolicy(env=env, name="%s/pi" % env_name, ob_env_name=ob_env_name, config=config)
    policy_vars = policy.get_variables()
    policy_path = load_model(path, policy_vars)
    return policy

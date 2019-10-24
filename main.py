@@ -12,6 +12,7 @@ from primitive import get_primitives
 from coarticulation import *
 
 from sac.core import PrimitivePolicySAC
+from transition.ppolicy import PrimitivePolicy
 
 from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
@@ -42,7 +43,7 @@ def evaluate_policy(env, policy, config):
     count = 0
     rewards = []
     while count < config.max_eval_iters:
-        if(isinstance(policy, PrimitivePolicySAC)):
+        if(isinstance(policy, PrimitivePolicySAC) or isinstance(policy, PrimitivePolicy)):
             action, _ = policy.step(obs)
         else:
             action, _, _, _ = policy.step(obs)
